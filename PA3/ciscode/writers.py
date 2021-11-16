@@ -20,26 +20,27 @@ class Writer:
         log.info(f"Saved output to {output_dir / self.fname}")
 
 
-class PA1(Writer):
-    """Output formatter class for programming assignment 1."""
+class PA3(Writer):
+    """Output formatter class for programming assignment 3."""
 
-    def __init__(self, name: str, em_post, opt_post, C):
+    def __init__(self, name: str, d, c, mag):
         super().__init__(f"{name}-output1.txt")
         self.name = name
-        self.em_post = em_post
-        self.opt_post = opt_post
-        self.C = C
-        self.N_frames = C.shape[0]
-        self.N_C = C.shape[1]
+        self.d = d
+        self.c = c
+        self.diff = mag
+        self.N_samps = mag.shape[0]
 
     def __str__(self):
         outputs = []
-        outputs.append(f"{self.N_C}, {self.N_frames}, {self.name}")
-        outputs.append(", ".join(map(lambda x: f"  {x:.02f}", self.em_post)))
-        outputs.append(", ".join(map(lambda x: f"  {x:.02f}", self.opt_post)))
+        outputs.append(f"{self.N_samps}, {self.name}")
         outputs += [
-            ", ".join(map(lambda x: f"  {x:.02f}", self.C[k, i]))
-            for k in range(self.N_frames)
-            for i in range(self.N_C)
+            (
+                "\t".join(map(lambda x: f"  {x:.02f}", self.d[i])),
+                "\t".join(map(lambda x: f"  {x:.02f}", self.c[i])),
+                "\t".join(map(lambda x: f"  {x:.02f}", self.diff[i])),
+
+            )
+            for i in range(self.N_samps)
         ]
         return "\n".join(outputs)

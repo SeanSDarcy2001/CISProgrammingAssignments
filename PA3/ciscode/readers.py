@@ -2,101 +2,69 @@ import numpy as np
 from pathlib import Path
 
 
-class CalBody:
-    """Parses the calibration body data."""
+class ProblemXBodyY:
+    """Parses the LED marker data."""
 
     def __init__(self, path: str):
         self.path = path
         with open(path, "r") as f:
             line = next(f)
-            toks = line.replace(" ", "").split(",")
-            self.N_D = int(toks[0])
-            self.N_A = int(toks[1])
-            self.N_C = int(toks[2])
+            toks = line.split(" ")
+            self.N_m = int(toks[0])     # number of marker LEDs
 
-        arr = np.loadtxt(path, delimiter=",", skiprows=1, dtype=np.float64)
-        self.d = arr[: self.N_D]
-        self.a = arr[self.N_D : self.N_D + self.N_A]
-        self.c = arr[self.N_D + self.N_A :]
+        arr = np.loadtxt(path, delimiter="\t", skiprows=1, dtype=np.float64)
+        self.Y = arr[: self.N_m]        # marker LEDs in body coordinates
+        self.t = arr[self.N_m:]         # tip in body coordinates
 
 
-class CalReadings:
-    """Parses the calibration readings data."""
+class ProblemXMesh:
+    """Parses the body surface definition data."""
 
     def __init__(self, path: str):
         self.path = Path(path)
         with open(path, "r") as f:
             line = next(f)
-            toks = line.replace(" ", "").split(",")
-            self.N_D = int(toks[0])
-            self.N_A = int(toks[1])
-            self.N_C = int(toks[2])
-            self.N_frames = int(toks[3])
+            self.N_v = int(line)     # number of vertices
 
-        arr = np.loadtxt(path, delimiter=",", skiprows=1, dtype=np.float64)
-        self.D = np.empty([self.N_frames, self.N_D, 3], np.float64)
-        self.A = np.empty([self.N_frames, self.N_A, 3], np.float64)
-        self.C = np.empty([self.N_frames, self.N_C, 3], np.float64)
-        for f, st in enumerate(range(0, arr.shape[0], self.N_D + self.N_A + self.N_C)):
-            self.D[f] = arr[st : st + self.N_D]
-            self.A[f] = arr[st + self.N_D : st + self.N_D + self.N_A]
-            self.C[f] = arr[
-                st + self.N_D + self.N_A : st + self.N_D + self.N_A + self.N_C
-            ]
+        arr = np.loadtxt(path, delimiter="\t", skiprows=1, dtype=np.float64)
+        self.V = arr[: self.N_v]        # vertices in CT coordinates
+        self.N_t = int(arr[self.N_v])   # number of triangles
+        self.trig = arr[self.N_v + 1:]  # vertex indices for triangles
 
 
-class EMPivot:
-    """Parses the EM pivot data."""
+class SampleReadings:
+    """Parses the sample readings data."""
 
     def __init__(self, path):
         self.path = Path(path)
         with open(path, "r") as f:
             line = next(f)
             toks = line.replace(" ", "").split(",")
-            self.N_G = int(toks[0])
-            self.N_frames = int(toks[1])
+            # LEDs read by tracker in each sample frame
+            self.N_s = int(toks[0])
+            self.N_samps = int(toks[1])  # number of sample frames
 
         arr = np.loadtxt(path, delimiter=",", skiprows=1, dtype=np.float64)
-        self.G = np.empty([self.N_frames, self.N_G, 3], np.float64)
-        for k, st in enumerate(range(0, arr.shape[0], self.N_G)):
-            self.G[k] = arr[st : st + self.N_G]
-
-
-class OptPivot:
-    """Parses the optical pivot data."""
-
-    def __init__(self, path):
-        self.path = path
-        with open(path, "r") as f:
-            line = next(f)
-            toks = line.replace(" ", "").split(",")
-            self.N_D = int(toks[0])
-            self.N_H = int(toks[1])
-            self.N_frames = int(toks[2])
-
-        arr = np.loadtxt(path, delimiter=",", skiprows=1, dtype=np.float64)
-        self.D = np.empty([self.N_frames, self.N_D, 3], np.float64)
-        self.H = np.empty([self.N_frames, self.N_H, 3], np.float64)
-        for f, st in enumerate(range(0, arr.shape[0], self.N_D + self.N_H)):
-            self.D[f] = arr[st : st + self.N_D]
-            self.H[f] = arr[st + self.N_D : st + self.N_D + self.N_H]
+        self.S = np.empty([self.N_samps, self.N_s, 3], np.float64)
+        for k, st in enumerate(range(0, arr.shape[0], self.N_s)):
+            self.S[k] = arr[st: st + self.N_s]
 
 
 class OutputReader:
-    """Parses a formatted output file for programming assignment 1."""
+    """Parses a formatted output file for programming assignment 3."""
 
     def __init__(self, path):
         self.path = Path(path)
         with open(path, "r") as f:
             line = next(f)
-            toks = line.replace(" ", "").split(",")
-            self.N_C = int(toks[0])
-            self.N_frames = int(toks[1])
+            toks = line.split(" ")
+            self.N_samps = int(toks[0])
 
-        arr = np.loadtxt(path, delimiter=",", skiprows=1, dtype=np.float64)
-        self.em_post = arr[0]
-        self.opt_post = arr[1]
-        arr = arr[2:]
-        self.C = np.empty([self.N_frames, self.N_C, 3], np.float64)
-        for f, st in enumerate(range(0, arr.shape[0], self.N_C)):
-            self.C[f] = arr[st : st + self.N_C]
+        arr = np.loadtxt(path, delimiter="\t", skiprows=1, dtype=np.float64)
+        self.d = np.empty([self.N_samps, 3], np.float64)
+        self.c = np.empty([self.N_samps, 3], np.float64)
+        self.diff = np.empty([self.N_samps], np.float64)
+        for s in range(self.N_samps):
+            self.d[s] = arr[s, 0:3]
+            self.c[s] = arr[s, 3:6]
+            self.diff[s] = arr[s, 6]
