@@ -22,8 +22,8 @@ log = logging.getLogger("ciscode")
 
 
 @click.command()
-@click.option("-d", "--data-dir", default="data", help="Where the data is.")
-@click.option("-o", "--output_dir", default="outputs", help="Where to store outputs.")
+@click.option("-d", "--data-dir", default="PA3/data", help="Where the data is.")
+@click.option("-o", "--output_dir", default="PA3/outputs", help="Where to store outputs.")
 @click.option("-n", "--name", default="pa1-debug-a", help="Which experiment to run.")
 def main(
     data_dir: str = "data", output_dir: str = "outputs", name: str = "pa1-debug-a"
@@ -67,8 +67,10 @@ def main(
     ref_output_path = data_dir / output.fname
     if ref_output_path.exists():
         ref = readers.OutputReader(ref_output_path)
-        log.info(f"EM Post Error: {np.linalg.norm(ref.em_post - output.em_post)}")
-        log.info(f"Opt Post Error: {np.linalg.norm(ref.opt_post - output.opt_post)}")
+        log.info(
+            f"EM Post Error: {np.linalg.norm(ref.em_post - output.em_post)}")
+        log.info(
+            f"Opt Post Error: {np.linalg.norm(ref.opt_post - output.opt_post)}")
         log.info(
             f"Mean C_i Error: " f"{np.linalg.norm(ref.C - output.C, axis=-1).mean()}"
         )
