@@ -5,7 +5,6 @@ from rich.progress import track
 import time
 from pathlib import Path
 import numpy as np
-from PA3.ciscode.closest import get_closest_vertex
 
 
 from ciscode import readers, Frame, pointer, writers, closest
@@ -19,7 +18,7 @@ logging.basicConfig(
     handlers=[RichHandler(rich_tracebacks=True)],
 )
 
-log = logging.getLogger("ciscode")
+log = logging.getLogger()
 
 
 @click.command()
@@ -61,34 +60,48 @@ def main(
     log.debug("computing s_k points using F_reg")
 
     c = np.empty((sample_readings.N_samps, 3))
-    dists = np.empty((sample_readings.N_samps, 3))
+    dists = np.empty((sample_readings.N_samps))
 
     # Assumption for PA3
-    F_reg = Frame(np.eye(3, dtype=np.float32), np.array([0, 0, 0, 1]))
+    F_reg = Frame(np.eye(3, dtype=np.float32), np.array([0, 0, 0]))
 
     for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
         s = F_reg @ d[k]
-        dist, c_k = get_closest_vertex(s, mesh.V)
+        dist, c_k = closest.get_closest_vertex(s, mesh.V)
         c[k] = c_k
         dists[k] = dist
 
-    # log.debug("writing ooutput")
-    # output = writers.PA1(name, em_post, opt_post, C)
-    # output.save(output_dir)
+    log.debug("writing output")
+    output = writers.PA3(name, d, c, dists)
+    output.save(output_dir)
 
-    # ref_output_path = data_dir / output.fname
-    # if ref_output_path.exists():
-    #     ref = readers.OutputReader(ref_output_path)
-    #     log.info(
-    #         f"EM Post Error: {np.linalg.norm(ref.em_post - output.em_post)}")
-    #     log.info(
-    #         f"Opt Post Error: {np.linalg.norm(ref.opt_post - output.opt_post)}")
-    #     log.info(
-    #         f"Mean C_i Error: " f"{np.linalg.norm(ref.C - output.C, axis=-1).mean()}"
-    #     )
-    #     log.info(
-    #         f"Max C_i Error: " f"{np.linalg.norm(ref.C - output.C, axis=-1).max()}"
-    #     )
+    readout = name + "-Output.txt"
+    log.debug(readout)
+    log.debug(dists)
+
+    ref_output_path = data_dir / readout
+    if ref_output_path.exists():
+        ref = readers.OutputReader(ref_output_path)
+        log.info(
+            f"Mean d Error: " f"{np.linalg.norm(ref.d - output.d, axis=-1).mean()}"
+        )
+        log.info(
+            f"Max d Error: " f"{np.linalg.norm(ref.d - output.d, axis=-1).max()}"
+        )
+
+        log.info(
+            f"Mean c Error: " f"{np.linalg.norm(ref.c - output.c, axis=-1).mean()}"
+        )
+        log.info(
+            f"Max c Error: " f"{np.linalg.norm(ref.c - output.c, axis=-1).max()}"
+        )
+
+        log.info(
+            f"Mean Distance Error: " f"{np.linalg.norm(ref.diff - output.diff, axis=-1).mean()}"
+        )
+        log.info(
+            f"Max Distance Error: " f"{np.linalg.norm(ref.diff - output.diff, axis=-1).max()}"
+        )
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from .frame import Frame
 
 def distance(
     point: np.ndarray, vertex: np.ndarray
-) -> np.float32:
+) -> np.float64:
     return np.linalg.norm(point - vertex)
 
 
@@ -26,7 +26,7 @@ def brute_force(
 
 def get_closest_vertex(
     point: np.ndarray, vertices: np.ndarray, brute: bool = True
-) -> Tuple[np.float32, np.ndarray]:
+) -> Tuple[np.float64, np.ndarray]:
     """Computes closest vertex to point and returns distance.
 
     Args:

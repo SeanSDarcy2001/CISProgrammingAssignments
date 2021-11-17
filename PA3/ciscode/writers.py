@@ -34,14 +34,12 @@ class PA3(Writer):
 
     def __str__(self):
         outputs = []
-        outputs.append(f"{self.N_samps}, {self.name}")
-        outputs += [
-            (
-                "\t".join(map(lambda x: f"  {x:.02f}", self.d[i])),
-                "\t".join(map(lambda x: f"  {x:.02f}", self.c[i])),
-                "\t".join(map(lambda x: f"  {x:.02f}", self.diff[i])),
+        outputs.append(f"{self.N_samps}, {self.fname}")
+        for i in range(self.N_samps):
+            outputs += [
+                "\t".join(map(lambda x: f"  {x:.02f}", self.d[i])) +
+                "\t".join(map(lambda x: f"   {x:.02f}", self.c[i])) +
+                "\t".join(f" {self.diff[i]:.02f}")
+            ]
 
-            )
-            for i in range(self.N_samps)
-        ]
         return "\n".join(outputs)
