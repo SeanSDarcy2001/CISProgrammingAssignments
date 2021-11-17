@@ -41,16 +41,21 @@ def main(
     sample_readings = readers.SampleReadings(
         data_dir / f"{name}-SampleReadingsTest.txt")
 
-    log.debug("Problem 1")
-    # C = np.empty((cal_readings.N_frames, cal_body.N_C, 3))
+    log.debug("point-cloud to point-cloud registration")
 
-    # for k in track(range(cal_readings.N_frames), "Computing C_i's..."):
-    #     time.sleep(0.3)
-    #     F_D = Frame.from_points(cal_body.d, cal_readings.D[k])
-    #     log.debug(f"{k}: F_D =\n{F_D}")
-    #     F_A = Frame.from_points(cal_body.a, cal_readings.A[k])
-    #     log.debug(f"{k}: F_A =\n{F_A}")
-    #     C[k] = F_D.inv() @ F_A @ cal_body.c
+    d = np.empty((sample_readings.N_samps, 3))
+
+    for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
+        time.sleep(0.3)
+        marks = sample_readings.S[k]
+        a = marks[: A_bod.N_m]
+        b = marks[A_bod.N_m: A_bod.N_m + B_bod.N_m]
+
+        F_A = Frame.from_points(A_bod.Y, a)
+        log.debug(f"{k}: F_A =\n{F_A}")
+        F_B = Frame.from_points(B_bod.Y, b)
+        log.debug(f"{k}: F_B =\n{F_B}")
+        d[k] = F_B.inv() @ F_A @ A_bod.t
 
     # log.debug("Problem 2")
     # _, _, em_post = pointer.pivot_calibration(em_pivot.G, return_post=True)
