@@ -37,9 +37,11 @@ class PA3(Writer):
         outputs.append(f"{self.N_samps}, {self.fname}")
         for i in range(self.N_samps):
             outputs += [
-                "\t".join(map(lambda x: f"  {x:.02f}", self.d[i])) +
-                "\t".join(map(lambda x: f"   {x:.02f}", self.c[i])) +
-                "\t".join(f" {self.diff[i]:.02f}")
+                "  " +
+                "   ".join(map(lambda x: f"{x:>6.02f}", self.d[i])) +
+                "       " +
+                "   ".join(map(lambda x: f"{x:>6.02f}", self.c[i])) +
+                f"    {self.diff[i]:>6.03f}"
             ]
 
         return "\n".join(outputs)

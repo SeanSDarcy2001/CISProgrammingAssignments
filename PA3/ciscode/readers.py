@@ -33,7 +33,7 @@ class ProblemXMesh:
         self.V = np.loadtxt(
             path, skiprows=1, max_rows=self.N_v, dtype=np.float64)
         # vertex indices for triangles
-        self.trig = np.loadtxt(path, skiprows=self.N_v+2, dtype=np.float64)
+        self.trig = np.loadtxt(path, skiprows=self.N_v+2, dtype=int)
 
 
 class SampleReadings:

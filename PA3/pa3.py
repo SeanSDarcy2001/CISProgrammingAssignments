@@ -67,7 +67,7 @@ def main(
 
     for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
         s = F_reg @ d[k]
-        dist, c_k = closest.get_closest_vertex(s, mesh.V)
+        dist, c_k = closest.get_closest_vertex(s, mesh.V, mesh.trig)
         c[k] = c_k
         dists[k] = dist
 

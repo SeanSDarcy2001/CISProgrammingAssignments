@@ -10,28 +10,41 @@ def distance(
 
 
 def brute_force(
-    point: np.ndarray, vertices: np.ndarray
+    a: np.ndarray, v: np.ndarray, t: np.ndarray
 ) -> np.ndarray:
     min = np.inf
-    index = -1
-    for i, v in enumerate(vertices):
-        dist = distance(point, v)
+    closest = 0
+
+    for i, tri in enumerate(t):
+        p = v[tri[0]]
+        q = v[tri[1]]
+        r = v[tri[2]]
+        A = np.array([q - p, r - p]).T
+        B = (a - p).T
+
+        x, _, _, _ = np.linalg.lstsq(A, B, rcond=None)
+        x = x.T
+
+        c = p + x[0] * (q - p) + x[1] * (r - p)
+
+        dist = distance(a, c)
         if min > dist:
             min = dist
-            index = i
+            closest = c
 
-    # return vertices.argmin(distance(point, vertices), axis=0)
-    return index
+    return closest
 
 
 def get_closest_vertex(
-    point: np.ndarray, vertices: np.ndarray, brute: bool = True
+    point: np.ndarray, vertices: np.ndarray,
+    t: np.ndarray, brute: bool = True
 ) -> Tuple[np.float64, np.ndarray]:
     """Computes closest vertex to point and returns distance.
 
     Args:
         points (np.ndarray): The point of interest
         vertices (np.ndarray): List of vertices to be matched
+        t (np.ndarray): List of triangle vertex indices
         brute (bool): Whether or not to use brute-force search
 
     Returns:
@@ -40,8 +53,8 @@ def get_closest_vertex(
             coordinates.
     """
     if brute:
-        i = brute_force(point, vertices)
-        return distance(point, vertices[i]), vertices[i]
+        c = brute_force(point, vertices, t)
+        return distance(point, c), c
     else:
-        i = brute_force(point, vertices)
-        return distance(point, vertices[i]), vertices[i]
+        c = brute_force(point, vertices, t)
+        return distance(point, c), c
