@@ -23,13 +23,14 @@ class Writer:
 class PA3(Writer):
     """Output formatter class for programming assignment 3."""
 
-    def __init__(self, name: str, d, c, mag):
-        super().__init__(f"{name}-output1.txt")
+    def __init__(self, name: str, d, c, D):
+        letter = name.split('-')[1]
+        super().__init__(f"pa3-{letter}-Output.txt")
         self.name = name
         self.d = d
         self.c = c
-        self.diff = mag
-        self.N_samps = mag.shape[0]
+        self.diff = D
+        self.N_samps = D.shape[0]
 
     def __str__(self):
         outputs = []

@@ -5,9 +5,10 @@ from rich.progress import track
 import time
 from pathlib import Path
 import numpy as np
+from PA3.ciscode.closest import get_closest_vertex
 
 
-from ciscode import readers, Frame, pointer, writers
+from ciscode import readers, Frame, pointer, writers, closest
 
 
 FORMAT = "%(message)s"
@@ -57,17 +58,21 @@ def main(
         log.debug(f"{k}: F_B =\n{F_B}")
         d[k] = F_B.inv() @ F_A @ A_bod.t
 
-    # log.debug("Problem 2")
-    # _, _, em_post = pointer.pivot_calibration(em_pivot.G, return_post=True)
+    log.debug("computing s_k points using F_reg")
 
-    # log.debug("Problem 3.")
-    # beacons_em = np.empty_like(opt_pivot.H)
-    # for k in range(opt_pivot.N_frames):
-    #     F_D = Frame.from_points(cal_body.d, opt_pivot.D[k])
-    #     beacons_em[k] = F_D.inv() @ opt_pivot.H[k]
+    c = np.empty((sample_readings.N_samps, 3))
+    dists = np.empty((sample_readings.N_samps, 3))
 
-    # _, _, opt_post = pointer.pivot_calibration(beacons_em, return_post=True)
+    # Assumption for PA3
+    F_reg = Frame(np.eye(3, dtype=np.float32), np.array([0, 0, 0, 1]))
 
+    for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
+        s = F_reg @ d[k]
+        dist, c_k = get_closest_vertex(s, mesh.V)
+        c[k] = c_k
+        dists[k] = dist
+
+    # log.debug("writing ooutput")
     # output = writers.PA1(name, em_post, opt_post, C)
     # output.save(output_dir)
 

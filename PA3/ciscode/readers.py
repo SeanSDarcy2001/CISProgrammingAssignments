@@ -64,10 +64,11 @@ class OutputReader:
             toks = line.split(" ")
             self.N_samps = int(toks[0])
 
-        arr = np.loadtxt(path, delimiter="\t", skiprows=1, dtype=np.float64)
+        arr = np.loadtxt(path, skiprows=1, dtype=np.float64)
         self.d = np.empty([self.N_samps, 3], np.float64)
         self.c = np.empty([self.N_samps, 3], np.float64)
         self.diff = np.empty([self.N_samps], np.float64)
+
         for s in range(self.N_samps):
             self.d[s] = arr[s, 0:3]
             self.c[s] = arr[s, 3:6]
