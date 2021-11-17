@@ -6,9 +6,9 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="ciscode",
     version="0.0.0",
-    author="Benjamin D. Killeen",
-    author_email="killeen@jhu.edu",
-    description="Stuff",
+    author="Alexandra Szewc, Seby Darcy",
+    author_email="aszewc1@jhu.edu",
+    description="PA3 Programming Assignment",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),

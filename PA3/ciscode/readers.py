@@ -12,7 +12,7 @@ class ProblemXBodyY:
             toks = line.split(" ")
             self.N_m = int(toks[0])     # number of marker LEDs
 
-        arr = np.loadtxt(path, delimiter="\t", skiprows=1, dtype=np.float64)
+        arr = np.loadtxt(path, skiprows=1, dtype=np.float64)
         self.Y = arr[: self.N_m]        # marker LEDs in body coordinates
         self.t = arr[self.N_m:]         # tip in body coordinates
 
@@ -23,13 +23,17 @@ class ProblemXMesh:
     def __init__(self, path: str):
         self.path = Path(path)
         with open(path, "r") as f:
-            line = next(f)
-            self.N_v = int(line)     # number of vertices
+            self.N_v = -1
+            for i, line in enumerate(f):
+                if i == 0:
+                    self.N_v = int(line)  # number of vertices
+                if i == self.N_v+1:
+                    self.N_t = int(line)  # number of triangles
 
-        arr = np.loadtxt(path, delimiter="\t", skiprows=1, dtype=np.float64)
-        self.V = arr[: self.N_v]        # vertices in CT coordinates
-        self.N_t = int(arr[self.N_v])   # number of triangles
-        self.trig = arr[self.N_v + 1:]  # vertex indices for triangles
+        self.V = np.loadtxt(
+            path, skiprows=1, max_rows=self.N_v, dtype=np.float64)
+        # vertex indices for triangles
+        self.trig = np.loadtxt(path, skiprows=self.N_v+2, dtype=np.float64)
 
 
 class SampleReadings:
