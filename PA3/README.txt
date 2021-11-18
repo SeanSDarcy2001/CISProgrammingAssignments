@@ -8,7 +8,7 @@ ciscode:
 	pointer.py  - contains pivot calibration code (unused here)
 	readers.py  - contains classes for reading input files
 	writers.py  - contains classes for writing output files
-	closest.py  - contains methods for 
+	closest.py  - contains methods for computing closest point on triangle mesh
 	testing.py  - contains testing and result validation suite for PA3
 data:
 	all data given to us for PA3
