@@ -5,7 +5,7 @@ from .frame import Frame
 
 def distance(
     point: np.ndarray, vertex: np.ndarray
-) -> np.float64:
+) -> np.float128:
     return np.linalg.norm(point - vertex)
 
 
@@ -27,6 +27,14 @@ def brute_force(
 
         c = p + x[0] * (q - p) + x[1] * (r - p)
 
+        # Check bound
+        if x[0] < 0:
+            c = triangle_bound(c, r, p)
+        elif x[1] < 0:
+            c = triangle_bound(c, p, q)
+        elif x[0] + x[1] > 1:
+            c = triangle_bound(c, q, r)
+
         dist = distance(a, c)
         if min > dist:
             min = dist
@@ -35,10 +43,17 @@ def brute_force(
     return closest
 
 
-def get_closest_vertex(
+def triangle_bound(c, p, q):
+    l = np.dot((c - p), (q - p)) / np.dot((q - p), (q - p))
+    l_s = max(0, min(l, 1))
+
+    return (np.cross((p + l_s), (q - p)))
+
+
+def find_closest(
     point: np.ndarray, vertices: np.ndarray,
     t: np.ndarray, brute: bool = True
-) -> Tuple[np.float64, np.ndarray]:
+) -> Tuple[np.float128, np.ndarray]:
     """Computes closest vertex to point and returns distance.
 
     Args:

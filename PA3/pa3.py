@@ -66,8 +66,9 @@ def main(
     F_reg = Frame(np.eye(3, dtype=np.float32), np.array([0, 0, 0]))
 
     for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
-        s = F_reg @ d[k]
-        dist, c_k = closest.get_closest_vertex(s, mesh.V, mesh.trig)
+        # s = F_reg @ d[k]
+        s = d[k]
+        dist, c_k = closest.find_closest(s, mesh.V, mesh.trig)
         c[k] = c_k
         dists[k] = dist
 
