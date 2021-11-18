@@ -6,12 +6,14 @@ from .frame import Frame
 def distance(
     point: np.ndarray, vertex: np.ndarray
 ) -> np.float64:
+    """Computes distance between two points."""
     return np.linalg.norm(point - vertex)
 
 
 def brute_force(
     a: np.ndarray, v: np.ndarray, t: np.ndarray
 ) -> np.ndarray:
+    """Linearly searches triangles for closest surface triangle."""
     min = np.inf
     closest = 0
 
@@ -32,7 +34,7 @@ def brute_force(
             c = triangle_bound(c, r, p)
         elif x[1] < 0:
             c = triangle_bound(c, p, q)
-        elif x[0] + x[1] > 1:
+        elif (x[0] + x[1]) > 1:
             c = triangle_bound(c, q, r)
 
         dist = distance(a, c)
@@ -44,6 +46,7 @@ def brute_force(
 
 
 def triangle_bound(c, p, q):
+    """Computes point projected on triangle edge."""
     l = np.dot((c - p), (q - p)) / np.dot((q - p), (q - p))
     l_s = max(0, min(l, 1))
 

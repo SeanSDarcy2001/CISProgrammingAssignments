@@ -34,7 +34,7 @@ def test_similarity(comp, true, err):
 
 def resultsTable(name, out, ref, ans):
     thresholds = [.001, 0.0025, 0.005, 0.0075, 0.01, 0.025,
-                  0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10]
+                  0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1, 2.5, 5, 7.5, 10, 15]
 
     outs = [out.d, out.c, out.diff]
     refs = [ref.d, ref.c, ref.diff]
@@ -54,7 +54,7 @@ def resultsTable(name, out, ref, ans):
             for thres in thresholds:
                 inaccurate = 100 - \
                     test_similarity(outs[i], comp[j][i], thres)
-                if (inaccurate < .5 and found == False):
+                if (inaccurate < 1 and found == False):
                     acceptableThres = thres
                     found = True
                 inaccuracy.append(inaccurate)

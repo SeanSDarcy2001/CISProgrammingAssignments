@@ -23,7 +23,7 @@ log = logging.getLogger()
 @click.command()
 @click.option("-d", "--data-dir", default="PA3/data", help="Where the data is.")
 @click.option("-o", "--output_dir", default="PA3/outputs", help="Where to store outputs.")
-@click.option("-n", "--name", default="PA3-A-Debug", help="Which experiment to run.")
+@click.option("-n", "--name", default="PA3-E-Debug", help="Which experiment to run.")
 def main(
     data_dir: str = "data", output_dir: str = "outputs", name: str = "BLAHHHH-"
 ):
