@@ -1,7 +1,7 @@
 Aszewc1
 sdarcy2
 
-pa3.py              - program driver with calls to closest.py and testing.py
+pa3.py              - program driver with main and calls to closest.py and testing.py
 ciscode:
 	__init__.py - initialization file
 	frame.py    - contains frame class with frame manipulation methods
