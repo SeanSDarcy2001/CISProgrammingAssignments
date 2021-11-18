@@ -20,7 +20,7 @@ class Frame:
         self.p = np.array(p)
 
     def __array__(self):
-        out = np.eye(4, dtype=np.float32)
+        out = np.eye(4, dtype=np.float64)
         out[:3, :3] = self.r
         out[:3, 3] = self.p
         return out
@@ -96,7 +96,8 @@ class Frame:
             d = np.linalg.det(R)
 
         if not np.isclose(d, 1):
-            raise RuntimeError(f"det(R) = {d}, should be +1 for rotation matrices.")
+            raise RuntimeError(
+                f"det(R) = {d}, should be +1 for rotation matrices.")
 
         return Frame(R, b_m - R @ a_m)
 

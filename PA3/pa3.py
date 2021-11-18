@@ -6,8 +6,7 @@ import time
 from pathlib import Path
 import numpy as np
 
-
-from ciscode import readers, Frame, pointer, writers, closest
+from ciscode import readers, Frame, writers, closest, testing
 
 
 FORMAT = "%(message)s"
@@ -63,11 +62,10 @@ def main(
     dists = np.empty((sample_readings.N_samps))
 
     # Assumption for PA3
-    F_reg = Frame(np.eye(3, dtype=np.float32), np.array([0, 0, 0]))
+    F_reg = Frame(np.eye(3, dtype=np.float64), np.array([0, 0, 0]))
 
     for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
-        # s = F_reg @ d[k]
-        s = d[k]
+        s = F_reg @ d[k]
         dist, c_k = closest.find_closest(s, mesh.V, mesh.trig)
         c[k] = c_k
         dists[k] = dist
@@ -76,11 +74,9 @@ def main(
     output = writers.PA3(name, d, c, dists)
     output.save(output_dir)
 
-    readout = name + "-Output.txt"
-    log.debug(readout)
     log.debug(dists)
 
-    ref_output_path = data_dir / readout
+    ref_output_path = data_dir / (name + "-Output.txt")
     if ref_output_path.exists():
         ref = readers.OutputReader(ref_output_path)
         log.info(
@@ -103,6 +99,14 @@ def main(
         log.info(
             f"Max Distance Error: " f"{np.linalg.norm(ref.diff - output.diff, axis=-1).max()}"
         )
+
+        ans_output_path = data_dir / (name + "-Answer.txt")
+        if ans_output_path.exists():
+            ans = readers.OutputReader(ans_output_path)
+
+            log.debug(
+                "run testing script to validate results against output and answer files given")
+            testing.resultsTable(name, output, ref, ans)
 
 
 if __name__ == "__main__":

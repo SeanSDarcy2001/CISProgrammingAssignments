@@ -5,7 +5,7 @@ from .frame import Frame
 
 def distance(
     point: np.ndarray, vertex: np.ndarray
-) -> np.float128:
+) -> np.float64:
     return np.linalg.norm(point - vertex)
 
 
@@ -53,7 +53,7 @@ def triangle_bound(c, p, q):
 def find_closest(
     point: np.ndarray, vertices: np.ndarray,
     t: np.ndarray, brute: bool = True
-) -> Tuple[np.float128, np.ndarray]:
+) -> Tuple[np.float64, np.ndarray]:
     """Computes closest vertex to point and returns distance.
 
     Args:
