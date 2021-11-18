@@ -26,7 +26,10 @@ def test_similarity(comp, true, err):
 
 # Function to generate % error vs coordinate threshold value plots
 # for each debugging set.
-# @Params: set - list of debug sets
+# @Params: name - name of current debug set
+#          out  - computed outputs
+#          ref  - outputs from Output.txt
+#          ans  - outputs from Answer.txt
 
 
 def resultsTable(name, out, ref, ans):
