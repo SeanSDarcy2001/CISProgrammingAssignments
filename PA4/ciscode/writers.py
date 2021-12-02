@@ -25,7 +25,7 @@ class PA3(Writer):
 
     def __init__(self, name: str, d, c, D):
         letter = name.split('-')[1]
-        super().__init__(f"pa3-{letter}-Output.txt")
+        super().__init__(f"pa4-{letter}-Output.txt")
         self.name = name
         self.d = d
         self.c = c

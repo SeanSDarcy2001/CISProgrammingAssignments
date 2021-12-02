@@ -21,9 +21,9 @@ log = logging.getLogger()
 
 
 @click.command()
-@click.option("-d", "--data-dir", default="PA3/data", help="Where the data is.")
-@click.option("-o", "--output_dir", default="PA3/outputs", help="Where to store outputs.")
-@click.option("-n", "--name", default="PA3-A-Debug", help="Which experiment to run.")
+@click.option("-d", "--data-dir", default="PA4/data", help="Where the data is.")
+@click.option("-o", "--output_dir", default="PA4/outputs", help="Where to store outputs.")
+@click.option("-n", "--name", default="PA4-A-Debug", help="Which experiment to run.")
 def main(
     data_dir: str = "data", output_dir: str = "outputs", name: str = "BLAHHHH-"
 ):
@@ -33,9 +33,9 @@ def main(
         output_dir.mkdir()
 
     # Read inputs
-    A_bod = readers.ProblemXBodyY(data_dir / f"Problem3-BodyA.txt")
-    B_bod = readers.ProblemXBodyY(data_dir / f"Problem3-BodyB.txt")
-    mesh = readers.ProblemXMesh(data_dir / f"Problem3MeshFile.sur")
+    A_bod = readers.ProblemXBodyY(data_dir / f"Problem4-BodyA.txt")
+    B_bod = readers.ProblemXBodyY(data_dir / f"Problem4-BodyB.txt")
+    mesh = readers.ProblemXMesh(data_dir / f"Problem4MeshFile.sur")
     log.debug(mesh)
     sample_readings = readers.SampleReadings(
         data_dir / f"{name}-SampleReadingsTest.txt")
