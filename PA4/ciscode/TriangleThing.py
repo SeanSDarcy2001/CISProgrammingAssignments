@@ -47,3 +47,6 @@ class TriangleThing:
         """Returns true if a given frame F is in bounds of box given by
         LB and UB."""
         return NotImplementedError
+
+    def closestPoint():
+        pass
