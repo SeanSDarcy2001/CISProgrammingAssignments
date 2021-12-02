@@ -4,7 +4,7 @@ import frame
 
 class TriangleThing:
 
-    corners: np.ndarray
+    # corners: np.ndarray
 
     def __init__(self, corners: np.ndarray) -> None:
         """Initialize triangle thing using corners."""
