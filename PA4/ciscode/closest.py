@@ -55,7 +55,7 @@ def triangle_bound(c, p, q):
 
 def find_closest(
     point: np.ndarray, vertices: np.ndarray,
-    t: np.ndarray, brute: bool = True
+    t: np.ndarray
 ) -> Tuple[np.float64, np.ndarray]:
     """Computes closest vertex to point and returns distance.
 
@@ -70,9 +70,5 @@ def find_closest(
             two points, and the location of the closest vertex in CT
             coordinates.
     """
-    if brute:
-        c = brute_force(point, vertices, t)
-        return distance(point, c), c
-    else:
-        c = brute_force(point, vertices, t)
-        return distance(point, c), c
+    c = brute_force(point, vertices, t)
+    return distance(point, c), c

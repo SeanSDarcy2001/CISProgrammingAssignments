@@ -11,34 +11,7 @@ class CovTreeNode:
     # HaveSubtrees: int
     # nThings: int
 
-    # WRONG ARGUMENTS?
-    # def __init__(self, F: frame, uB: np.ndarray, lB: np.ndarray, HaveSubtrees: int, nThings: int) -> None:
-    #     # Define splitting point
-    #     self.F = F
-    #     self.UB = np.array(uB)
-    #     self.LB = np.array(lB)
-
-    #     self.HaveSubtrees: int
-    #     self.nThings: int
-
-    # CLASS OUTLINE: DONT NEED IN PYTHON
-    # class CovTreeNode {
-    #     Frame F
-    #     // splitting point
-    #     Vec3 UB
-    #     Vec3 LB
-
-    #     int HaveSubtrees
-    #     self.nThings = nT
-
-    #     CovTreeNode * SubTrees[2]
-    #     Thing ** Things
-    #     CovTreeNode(Thing ** Ts, int nT)
-    #     ConstructSubtrees()
-    #     void FindClosestPoint(Vec3 v, double & bound, Vec3 & closest)
-    # }
-
-    def __init__(self, Ts: TriangleThing, nT: int) -> None:
+    def __init__(self, Ts: list, nT: int):
         self.Things = Ts
         self.nThings = nT
 
@@ -47,9 +20,9 @@ class CovTreeNode:
         self.ConstructSubtrees()
 
     def ComputeCovFrame(self):
-        Ts = self.TriangleThing
+        Ts = self.Things
         nT = self.nThings
-        Points, nP = ExtractPoints(Ts, nT)
+        Points, nP = TriangleThing.extractPoints(Ts, nT)
         # May extract nT sort points or perhaps
         # all corner points if things are triangles.
         return self.FindCovFrame(Points, nP)
@@ -65,10 +38,18 @@ class CovTreeNode:
         """Returns rotation matrix from A matrix."""
         l, Q = np.linalg.eig(A)
         qi = np.argmax(l)
-        qk = np.argmin(l)
-        qj = 3 - qi - qk
         q = Q[:, qi]
-        R = np.ndarray([q, Q[:, qj], Q[:, qk]])  # questionable
+        R = np.array([[q[0]**2 + q[1]**2 - q[2]**2 - q[3]**2,
+                       2*(q[1]*q[2] - q[0]*q[3]),
+                       2*(q[1]*q[3] + q[0]*q[2])],
+
+                      [2*(q[1]*q[2] + q[0]*q[3]),
+                       q[0]**2 - q[1]**2 + q[2]**2 - q[3]**2,
+                       2*(q[2]*q[3] - q[0]*q[1])],
+
+                      [2*(q[1]*q[3] - q[0]*q[2]),
+                       2*(q[2]*q[3] + q[0]*q[1]),
+                       q[0]**2 - q[1]**2 - q[2]**2 + q[3]**2]])
 
     def FindCovFrame(self, Ps: np.ndarray, nP: int):
         C = self.getCentroid(Ps, nP)
@@ -92,7 +73,7 @@ class CovTreeNode:
 
         return [UB, LB]
 
-    def SplitSort(self, F: frame.Frame, Ts: TriangleThing, nT: int):
+    def SplitSort(self):
         F = self.F
         Ts = self.Things
         nT = self.nThings
@@ -102,7 +83,7 @@ class CovTreeNode:
         # TODO: implement
         return 0  # nSplit
 
-    def ConstructSubtrees(self):
+    def ConstructSubtrees(self, minCount, minDiag):
         if (self.nThings <= minCount or np.linalg.norm(self.UB-self.LB) <= minDiag):
             self.HaveSubtrees = 0
             return
@@ -134,7 +115,7 @@ class CovTreeNode:
         return closest
 
     def UpdateClosest(self, T: TriangleThing, v: np.ndarray, bound: np.float64) -> np.ndarray:
-        cp = T.ClosestPointTo(v)
+        cp = T.closestPointTo(v)
         dist = np.linalg.norm(cp-v)
         if (dist < bound):
             bound = dist

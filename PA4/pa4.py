@@ -5,6 +5,7 @@ from rich.progress import track
 import time
 from pathlib import Path
 import numpy as np
+from PA4.ciscode.TriangleThing import TriangleThing
 
 from ciscode import readers, Frame, writers, closest, testing
 
@@ -60,15 +61,33 @@ def main(
 
     c = np.empty((sample_readings.N_samps, 3))
     dists = np.empty((sample_readings.N_samps))
+    last_dists = np.ones((sample_readings.N_samps))
+    diffs = np.inf
 
-    # Assumption for PA3
+    # Initial guess for PA4
     F_reg = Frame(np.eye(3, dtype=np.float64), np.array([0, 0, 0]))
 
-    for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
-        s = F_reg @ d[k]
-        dist, c_k = closest.find_closest(s, mesh.V, mesh.trig)
-        c[k] = c_k
-        dists[k] = dist
+    # Contruct collection of Triangle Things
+    things = []
+    for i in range(mesh.N_t):
+        things.append(TriangleThing(mesh.trig[:3]))
+
+    # Now assume that is an unknown transformation such that
+    # c = F*d. F = I, and for
+    # Problem 4 you can use this as an initial guess. Compute sample
+    # points s = F*d. Now find the points c on the surface mesh that
+    # are closest to the s. For
+    # Problem 4, you need to use these points to make a new estimate of
+    # F and iterate until done.
+    while (diffs != 0):
+        for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
+            s = F_reg @ d[k]
+            dist, c_k = closest.find_closest(s, mesh.V, mesh.trig)
+            c[k] = c_k
+            F_reg = Frame.from_points(d, c)
+            dists[k] = dist
+        diffs = np.abs(dists - last_dists)
+        last_dists = dists
 
     log.debug("writing output")
     output = writers.PA3(name, d, c, dists)

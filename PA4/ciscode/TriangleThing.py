@@ -7,7 +7,7 @@ class TriangleThing:
     # corners: np.ndarray
 
     def __init__(self, corners: np.ndarray) -> None:
-        """Initialize triangle thing using corners."""
+        """Initialize triangle thing using triangle vertices."""
         self.corners = corners
 
     def sortPoint(self) -> np.ndarray:
@@ -38,15 +38,22 @@ class TriangleThing:
         """Returns 1 if any part of FiC in bounding box with corners LB and UB."""
         FiC = F.inv() @ self.corners
         for i in range(3):
-            if self.inBounds(FiC[i], LB, UB):
+            if self.inBounds(FiC[i], LB[i], UB[i]):
                 return 1
         return 0
 
     # TODO Implement
-    def inBounds(self, F: frame, LB: np.ndarray, UB: np.ndarray) -> bool:
-        """Returns true if a given frame F is in bounds of box given by
-        LB and UB."""
-        return NotImplementedError
+    def inBounds(n: int, LB: int, UB: int) -> bool:
+        """Returns true if a given frame Finv * this is in bounds of box
+        given by LB and UB."""
+        top = np.max(LB, UB)
+        bot = np.min(LB, UB)
+        return n > bot and n < top
 
-    def closestPoint():
+    def extractPoints(Ts: np.ndarray, nT: int) -> np.ndarray:
+        # Return ndarray of points closest to each thing?
+        pass
+
+    def closestPointTo(v: np.ndarray):
+        # Find closest point to given vector
         pass
