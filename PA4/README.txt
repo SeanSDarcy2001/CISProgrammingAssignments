@@ -10,6 +10,8 @@ ciscode:
 	writers.py  - contains classes for writing output files
 	closest.py  - contains methods for computing closest point on triangle mesh
 	testing.py  - contains testing and result validation suite for PA4
+	thing.py.   - contains TriangleThing class and methods for PA4
+	covtree.py  - contains covTreeNode class and methods for search
 data:
 	all data given to us for PA4
 setup.py		   - required packages for "ciscode" starter
