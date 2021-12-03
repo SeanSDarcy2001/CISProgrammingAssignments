@@ -87,9 +87,10 @@ def main(
     while (any(diffs >= 1)):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            c_k, dist = tree.findClosestPoint(s, 1)
-            c[k] = c_k
-            dists[k] = dist
+            c_k = tree.findClosestPoint(s, 1)
+            if c_k is not None:
+                c[k] = c_k
+                dists[k] = np.linalg.norm(d[k] - c_k)
         F_reg = Frame.from_points(d, c)
         diffs = np.abs(dists - last_dists)
         last_dists = dists

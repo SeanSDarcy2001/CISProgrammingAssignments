@@ -151,14 +151,14 @@ class CovTreeNode:
         # similar checks on remaining bounds go here ....;
         if vLocal[2] > self.UB[2]+bound:
             return
-        if self.HaveSubtrees:
+        if self.HaveSubtrees:  # Search left and right subtrees
             self.lSubtree.findClosestPoint(v, bound)
             self.rSubtree.findClosestPoint(v, bound)
-        else:
+        else:  # Exhaustive search
             for i in range(self.nThings):
                 closest = self.UpdateClosest(self.Things[i], v, bound)
 
-        return closest, np.linalg.norm(closest - v)
+        return closest
 
     def UpdateClosest(self, T: TriangleThing, v: np.ndarray, bound: np.float64) -> np.ndarray:
         cp = T.closestPointTo(v)
