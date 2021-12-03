@@ -1,13 +1,13 @@
 import numpy as np
-from .TriangleThing import TriangleThing
+from .thing import TriangleThing
 from .frame import Frame
 
 
 class CovTreeNode:
 
-    def __init__(self, Ts: list, nT: int):
+    def __init__(self, Ts: list):
         self.Things = Ts
-        self.nThings = nT
+        self.nThings = len(Ts)
 
         self.F = self.ComputeCovFrame()
         self.UB, self.LB = self.FindBoundingBox()
@@ -126,7 +126,7 @@ class CovTreeNode:
 
         return nT
 
-    def ConstructSubtrees(self, minCount, minDiag):
+    def ConstructSubtrees(self, minCount=10, minDiag=10):
         if (self.nThings <= minCount or np.linalg.norm(self.UB-self.LB) <= minDiag):
             self.HaveSubtrees = 0
             return

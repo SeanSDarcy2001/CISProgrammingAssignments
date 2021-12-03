@@ -5,9 +5,8 @@ from rich.progress import track
 import time
 from pathlib import Path
 import numpy as np
-from PA4.ciscode.TriangleThing import TriangleThing
 
-from ciscode import readers, Frame, writers, closest, testing
+from ciscode import readers, Frame, writers, closest, testing, thing, covtree
 
 
 FORMAT = "%(message)s"
@@ -86,7 +85,7 @@ def main(
     while (diffs != 0):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            dist, c_k = closest.find_closest(s, mesh.V, mesh.trig)
+            dist, c_k = covtree.covTreeNode(things)
             c[k] = c_k
             F_reg = Frame.from_points(d, c)
             dists[k] = dist
