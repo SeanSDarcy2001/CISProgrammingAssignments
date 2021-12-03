@@ -59,9 +59,7 @@ def main(
     log.debug("computing s_k points using F_reg")
 
     c = np.empty((sample_readings.N_samps, 3))
-    dists = np.empty((sample_readings.N_samps))
-    last_dists = np.ones((sample_readings.N_samps))
-    diffs = np.ones(30)
+    dists = np.ones((sample_readings.N_samps)) * np.inf
 
     # Initial guess for PA4
     F_reg = Frame(np.eye(3), np.array([0, 0, 0]))
@@ -84,16 +82,15 @@ def main(
     # F and iterate until done.
     tree = covtree.CovTreeNode(things)
 
-    while (any(dists >= 20)):
+    while (any(dists > 5)):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            c_k = tree.findClosestPoint(s, 1)
+            c_k = tree.findClosestPoint(s, dists[k])
             if c_k is not None:
                 c[k] = c_k
                 dists[k] = np.linalg.norm(d[k] - c_k)
         F_reg = Frame.from_points(d, c)
-        diffs = np.abs(dists - last_dists)
-        last_dists = dists
+        print(max(dists))
 
     log.debug("writing output")
     output = writers.PA3(name, d, c, dists)

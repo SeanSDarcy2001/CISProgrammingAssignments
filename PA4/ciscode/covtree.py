@@ -14,6 +14,7 @@ class CovTreeNode:
         self.ConstructSubtrees()
 
     def appInvFrame(self, F: Frame, T: TriangleThing) -> np.ndarray:
+        """Finds Thing coordinates with respect to mesh."""
         return F.inv() @ T.sortPoint()
 
     def extractPoints(self, Ts: np.ndarray, nT: int) -> np.ndarray:
@@ -129,7 +130,8 @@ class CovTreeNode:
 
         return nT
 
-    def ConstructSubtrees(self, minCount=10, minDiag=10):
+    def ConstructSubtrees(self, minCount=2, minDiag=5):
+        """Constructs subtrees for covTree."""
         if (self.nThings <= minCount or np.linalg.norm(self.UB-self.LB) <= minDiag):
             self.HaveSubtrees = 0
             return
@@ -140,27 +142,53 @@ class CovTreeNode:
         self.rSubtree = CovTreeNode(
             self.Things[nSplit:self.nThings])
 
-    def findClosestPoint(self, v: np.ndarray, bound: np.float64):
+    def exhaustiveSearch(self, v, bound):
+        """Performs exhaustive search of all nodes in covTree."""
+        min_dist = np.inf
         closest = np.empty(3)
+        for i in range(self.nThings):
+            temp = self.UpdateClosest(self.Things[i], v, bound)
+            temp_dist = np.linalg.norm(temp-v)
+            if (temp_dist < min_dist):
+                min_dist = temp_dist
+                closest = temp
+        return closest
+
+    def findClosestPoint(self, v: np.ndarray, bound: np.float64):
+        """Finds closest point in mesh to given coordinates."""
         # Transform v to local coordinate system
         vLocal = self.F.inv() @ v
         if vLocal[0] > self.UB[0]+bound:
             return
         if vLocal[1] > self.UB[1]+bound:
             return
-        # similar checks on remaining bounds go here ....;
         if vLocal[2] > self.UB[2]+bound:
             return
-        if self.HaveSubtrees:  # Search left and right subtrees
-            self.lSubtree.findClosestPoint(v, bound)
-            self.rSubtree.findClosestPoint(v, bound)
-        else:  # Exhaustive search
-            for i in range(self.nThings):
-                closest = self.UpdateClosest(self.Things[i], v, bound)
+        if vLocal[0] < self.LB[0]-bound:
+            return
+        if vLocal[1] < self.LB[1]-bound:
+            return
+        if vLocal[2] < self.LB[2]-bound:
+            return
 
-        return closest
+        if self.HaveSubtrees:  # Search left and right subtrees
+            lclosest = self.lSubtree.findClosestPoint(v, bound)
+            rclosest = self.rSubtree.findClosestPoint(v, bound)
+            if (lclosest is None and rclosest is None):
+                return self.exhaustiveSearch(v, bound)
+            elif (lclosest is None):
+                return rclosest
+            elif (rclosest is None):
+                return lclosest
+            elif (np.linalg.norm(lclosest-v) < np.linalg.norm(rclosest-v)):
+                return lclosest
+            else:
+                return rclosest
+        else:  # Exhaustive search
+            return self.exhaustiveSearch(v, bound)
 
     def UpdateClosest(self, T: TriangleThing, v: np.ndarray, bound: np.float64) -> np.ndarray:
+        """Updates closest point if appropriate."""
         cp = T.closestPointTo(v)
         dist = np.linalg.norm(cp-v)
         if (dist < bound):
