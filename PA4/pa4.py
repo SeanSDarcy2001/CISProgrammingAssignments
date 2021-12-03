@@ -61,7 +61,7 @@ def main(
     c = np.empty((sample_readings.N_samps, 3))
     dists = np.empty((sample_readings.N_samps))
     last_dists = np.ones((sample_readings.N_samps))
-    diffs = np.inf
+    diffs = np.ones(30)
 
     # Initial guess for PA4
     F_reg = Frame(np.eye(3), np.array([0, 0, 0]))
@@ -82,14 +82,15 @@ def main(
     # are closest to the s. For
     # Problem 4, you need to use these points to make a new estimate of
     # F and iterate until done.
-    while (diffs > 1):
+    tree = covtree.CovTreeNode(things)
+
+    while (any(diffs >= 1)):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            tree = covtree.CovTreeNode(things)
             c_k, dist = tree.findClosestPoint(s, 1)
             c[k] = c_k
-            F_reg = Frame.from_points(d, c)
             dists[k] = dist
+        F_reg = Frame.from_points(d, c)
         diffs = np.abs(dists - last_dists)
         last_dists = dists
 
