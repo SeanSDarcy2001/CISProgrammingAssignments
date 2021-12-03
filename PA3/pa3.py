@@ -44,6 +44,9 @@ def main(
 
     d = np.empty((sample_readings.N_samps, 3))
 
+    # Start timing
+    start_time = time.time()
+
     for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
         time.sleep(0.3)
         marks = sample_readings.S[k]
@@ -69,6 +72,12 @@ def main(
         dist, c_k = closest.find_closest(s, mesh.V, mesh.trig)
         c[k] = c_k
         dists[k] = dist
+
+    # End timing
+    end_time = time.time()
+    log.info(
+        f"Execution Time: " f"{end_time - start_time}"
+    )
 
     log.debug("writing output")
     output = writers.PA3(name, d, c, dists)

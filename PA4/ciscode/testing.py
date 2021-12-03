@@ -41,7 +41,7 @@ def resultsTable(name, out, ref, ans):
     anss = [ans.d, ans.c, ans.diff]
     comp = [refs, anss]
 
-    output_dir = Path("PA3/plots").resolve()
+    output_dir = Path("PA4/plots").resolve()
     if not output_dir.exists():
         output_dir.mkdir()
 

@@ -44,8 +44,11 @@ def main(
 
     d = np.empty((sample_readings.N_samps, 3))
 
+    # Start timing
+    start_time = time.time()
+
     for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
-        #time.sleep(0.3)
+        # time.sleep(0.3)
         marks = sample_readings.S[k]
         a = marks[: A_bod.N_m]
         b = marks[A_bod.N_m: A_bod.N_m + B_bod.N_m]
@@ -91,27 +94,31 @@ def main(
             c_k = tree.findClosestPoint(s, dists[k])
             if c_k is not None:
                 temp = np.linalg.norm(s - c_k)
-                if (temp < dists[k]) :
+                if (temp < dists[k]):
                     dists[k] = np.linalg.norm(s - c_k)
                     c[k] = c_k
-        print("Iteration:", iteration)
-        print("Mean distance prev iteration:")    
-        print(np.mean(distHolder))
-        print("Mean distance this iteration:")          
-        print(np.mean(dists))
-        if (np.isclose(np.mean(dists), np.mean(distHolder))) :
+        log.debug("Iteration:", iteration)
+        log.debug("Mean distance prev iteration:")
+        log.debug(np.mean(distHolder))
+        log.debug("Mean distance this iteration:")
+        log.debug(np.mean(dists))
+        if (np.isclose(np.mean(dists), np.mean(distHolder))):
             convergence = True
-            print("no change, convergence reached")
+            log.debug("no change, convergence reached")
         distHolder = dists.copy()
         F_reg = Frame.from_points(d, c)
         iteration = iteration + 1
-        #print(dists)
+        log.debug(dists)
+
+    # End timing
+    end_time = time.time()
+    log.info(
+        f"Execution Time: " f"{end_time - start_time}"
+    )
 
     log.debug("writing output")
     output = writers.PA4(name, d, c, dists)
     output.save(output_dir)
-
-    log.debug(dists)
 
     ref_output_path = data_dir / (name + "-Output.txt")
     if ref_output_path.exists():
