@@ -9,7 +9,7 @@ class TriangleThing:
         self.corners = corners
 
     def sortPoint(self) -> np.ndarray:
-        """Returns point that can be used to sort the object."""
+        """Returns the mean point that can be used to sort the object."""
         return np.mean(self.corners, axis=0)
 
     def enlargeBounds(self, F: frame, LB: np.ndarray, UB: np.ndarray) -> np.ndarray:
@@ -26,6 +26,7 @@ class TriangleThing:
         return [LB, UB]
 
     def boundingBox(self, F: frame) -> np.ndarray:
+        """Returns infinite bounding box."""
         return self.enlargeBounds(F, np.ndarray(np.Inf, np.Inf, np.Inf), np.ndarray(np.NINF, np.NINF, np.NINF))
 
     def mayBeInBounds(self, F: frame, LB: np.ndarray, UB: np.ndarray) -> int:
@@ -38,13 +39,13 @@ class TriangleThing:
 
     def inBounds(n: int, LB: int, UB: int) -> bool:
         """Returns true if a given frame Finv * this is in bounds of box
-        given by LB and UB."""
+        given by LB and UB in each dimension."""
         top = np.max(LB, UB)
         bot = np.min(LB, UB)
         return n >= bot and n <= top
 
     def closestPointTo(self, v: np.ndarray) -> np.ndarray:
-        """Find closest point to given vector."""
+        """Find closest triangle point to given vector."""
         max_point = 0
         min_dist = np.inf
         for i in range(3):
