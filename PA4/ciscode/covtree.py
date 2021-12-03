@@ -13,10 +13,10 @@ class CovTreeNode:
         self.UB, self.LB = self.FindBoundingBox()
         self.ConstructSubtrees()
 
-    def appInvFrame(F: Frame, T: TriangleThing):
-        return F.inv @ T.sortPoint()
+    def appInvFrame(self, F: Frame, T: TriangleThing):
+        return F.inv() @ T.sortPoint()
 
-    def extractPoints(Ts: np.ndarray, nT: int) -> np.ndarray:
+    def extractPoints(self, Ts: np.ndarray, nT: int) -> np.ndarray:
         """Return sort points for Thing."""
         sort_points = np.empty((nT, 3))
         for i in range(nT):
@@ -27,21 +27,22 @@ class CovTreeNode:
         """Extract sort points of all Things to compute covariance frame."""
         Ts = self.Things
         nT = self.nThings
-        Points, nP = self.extractPoints(Ts, nT)
-        return self.FindCovFrame(Points, nP)
+        Points = self.extractPoints(Ts, nT)
+        return self.FindCovFrame(Points, nT)
 
-    def getCentroid(Ps: np.ndarray, nP: int):
+    def getCentroid(self, Ps: np.ndarray, nP: int):
         """Returns centroid of a series of points."""
         x = np.sum(Ps[0])
         y = np.sum(Ps[1])
         z = np.sum(Ps[2])
         return np.array([x/nP, y/nP, z/nP])
 
-    def getRotMat(A: np.ndarray):
+    def getRotMat(self, A: np.ndarray):
         """Returns rotation matrix from A matrix."""
         l, Q = np.linalg.eig(A)
         qi = np.argmax(l)
-        q = Q[:, qi]
+        qt = np.expand_dims(Q[:, qi], axis=1)
+        q = np.row_stack((0, qt))
         R = np.array([[q[0]**2 + q[1]**2 - q[2]**2 - q[3]**2,
                        2*(q[1]*q[2] - q[0]*q[3]),
                        2*(q[1]*q[3] + q[0]*q[2])],
@@ -53,6 +54,7 @@ class CovTreeNode:
                       [2*(q[1]*q[3] - q[0]*q[2]),
                        2*(q[2]*q[3] + q[0]*q[1]),
                        q[0]**2 - q[1]**2 - q[2]**2 + q[3]**2]])
+        return R
 
     def FindCovFrame(self, Ps: np.ndarray, nP: int):
         """Find covariance frame by finding centroid and rotation."""

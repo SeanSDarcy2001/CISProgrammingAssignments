@@ -73,7 +73,7 @@ def main(
         for c in range(3):
             index = mesh.trig[i, c]
             points[c] = mesh.V[index]
-        things.append(TriangleThing(points))
+        things.append(thing.TriangleThing(points))
 
     # Now assume that is an unknown transformation such that
     # c = F*d. F = I, and for
@@ -85,7 +85,7 @@ def main(
     while (diffs != 0):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            dist, c_k = covtree.covTreeNode(things)
+            dist, c_k = covtree.CovTreeNode(things)
             c[k] = c_k
             F_reg = Frame.from_points(d, c)
             dists[k] = dist
