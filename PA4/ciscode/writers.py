@@ -20,8 +20,8 @@ class Writer:
         log.info(f"Saved output to {output_dir / self.fname}")
 
 
-class PA3(Writer):
-    """Output formatter class for programming assignment 3."""
+class PA4(Writer):
+    """Output formatter class for programming assignment 4."""
 
     def __init__(self, name: str, d, c, D):
         letter = name.split('-')[1]

@@ -93,7 +93,7 @@ def main(
         print(max(dists))
 
     log.debug("writing output")
-    output = writers.PA3(name, d, c, dists)
+    output = writers.PA4(name, d, c, dists)
     output.save(output_dir)
 
     log.debug(dists)
