@@ -13,7 +13,7 @@ class CovTreeNode:
         self.UB, self.LB = self.FindBoundingBox()
         self.ConstructSubtrees()
 
-    def appInvFrame(self, F: Frame, T: TriangleThing):
+    def appInvFrame(self, F: Frame, T: TriangleThing) -> np.ndarray:
         return F.inv() @ T.sortPoint()
 
     def extractPoints(self, Ts: np.ndarray, nT: int) -> np.ndarray:
@@ -32,9 +32,9 @@ class CovTreeNode:
 
     def getCentroid(self, Ps: np.ndarray, nP: int):
         """Returns centroid of a series of points."""
-        x = np.sum(Ps[0])
-        y = np.sum(Ps[1])
-        z = np.sum(Ps[2])
+        x = np.sum(Ps[:, 0])
+        y = np.sum(Ps[:, 1])
+        z = np.sum(Ps[:, 2])
         return np.array([x/nP, y/nP, z/nP])
 
     def getRotMat(self, A: np.ndarray):
@@ -54,7 +54,7 @@ class CovTreeNode:
                       [2*(q[1]*q[3] - q[0]*q[2]),
                        2*(q[2]*q[3] + q[0]*q[1]),
                        q[0]**2 - q[1]**2 - q[2]**2 + q[3]**2]])
-        return R
+        return R.squeeze()
 
     def FindCovFrame(self, Ps: np.ndarray, nP: int):
         """Find covariance frame by finding centroid and rotation."""
@@ -62,7 +62,7 @@ class CovTreeNode:
 
         A = 0
         for i in range(nP):
-            A += np.outer(Ps[i], Ps[i])
+            A += np.outer(Ps[i, :3], Ps[i, :3])
         R = self.getRotMat(A)
 
         return Frame(R, C)
@@ -121,9 +121,10 @@ class CovTreeNode:
         Ts = self.Things
         nT = self.nThings
 
-        self.Things = self.quickSort(Ts, 0, nT-1)
+        self.quickSort(Ts, 0, nT-1)
+        self.Things = Ts
         for i in range(nT):
-            if (self.appInvFrame(F, self.Things[i])[0] >= 0):
+            if ((self.appInvFrame(F, Ts[i]))[0] >= 0):
                 return i
 
         return nT
@@ -134,15 +135,15 @@ class CovTreeNode:
             return
 
         self.HaveSubtrees = 1
-        nSplit = self.SplitSort(self.F, self.Things)
-        self.lSubtree = self.CovarianceTreeNode(self.Things[0], nSplit)
-        self.rSubtree = self.CovarianceTreeNode(
-            self.Things[nSplit], self.nThings - nSplit)
+        nSplit = self.SplitSort()
+        self.lSubtree = CovTreeNode(self.Things[0:nSplit])
+        self.rSubtree = CovTreeNode(
+            self.Things[nSplit:self.nThings])
 
     def findClosestPoint(self, v: np.ndarray, bound: np.float64):
         closest = np.empty(3)
         # Transform v to local coordinate system
-        vLocal = self.F.inv @ v
+        vLocal = self.F.inv() @ v
         if vLocal[0] > self.UB[0]+bound:
             return
         if vLocal[1] > self.UB[1]+bound:
@@ -151,13 +152,13 @@ class CovTreeNode:
         if vLocal[2] > self.UB[2]+bound:
             return
         if self.HaveSubtrees:
-            self.lSubtree.FindClosestPoint(v, bound, closest)
-            self.rSubtree.FindClosestPoint(v, bound, closest)
+            self.lSubtree.findClosestPoint(v, bound, closest)
+            self.rSubtree.findClosestPoint(v, bound, closest)
         else:
             for i in range(self.nThings):
                 closest = self.UpdateClosest(self.Things[i], v, bound)
 
-        return closest
+        return closest, np.linalg.norm(closest - v)
 
     def UpdateClosest(self, T: TriangleThing, v: np.ndarray, bound: np.float64) -> np.ndarray:
         cp = T.closestPointTo(v)

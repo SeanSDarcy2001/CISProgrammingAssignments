@@ -6,7 +6,7 @@ class TriangleThing:
 
     def __init__(self, corners: np.ndarray) -> None:
         """Initialize triangle thing using triangle vertices."""
-        self.corners = np.array(corners)
+        self.corners = corners
 
     def sortPoint(self) -> np.ndarray:
         """Returns point that can be used to sort the object."""
@@ -16,15 +16,14 @@ class TriangleThing:
         """Given a frame F, and corners LB and UB of bounding box
         around some other things, returns the corners of a bounding
         box that includes Thing2."""
-        FiC = np.array(frame.Frame.__matmul__(
-            F.inv(), self.corners))
-        print(FiC.shape)
+
+        FiC = F.inv() @ self.corners
         for i in range(3):
             for c in range(3):
-                LB[c] = np.min(LB[c], FiC[i, c])
-                UB[c] = np.max(UB[c], FiC[i, c])
+                LB[c] = min(LB[c], FiC[i, c])
+                UB[c] = max(UB[c], FiC[i, c])
 
-        return np.ndarray([LB, UB])
+        return [LB, UB]
 
     def boundingBox(self, F: frame) -> np.ndarray:
         return self.enlargeBounds(F, np.ndarray(np.Inf, np.Inf, np.Inf), np.ndarray(np.NINF, np.NINF, np.NINF))

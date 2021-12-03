@@ -5,7 +5,7 @@ from .frame import Frame
 
 def distance(
     point: np.ndarray, vertex: np.ndarray
-) -> np.float64:
+):
     """Computes distance between two points."""
     return np.linalg.norm(point - vertex)
 

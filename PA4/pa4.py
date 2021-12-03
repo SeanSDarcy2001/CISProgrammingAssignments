@@ -64,7 +64,7 @@ def main(
     diffs = np.inf
 
     # Initial guess for PA4
-    F_reg = Frame(np.eye(3, dtype=np.float64), np.array([0, 0, 0]))
+    F_reg = Frame(np.eye(3), np.array([0, 0, 0]))
 
     # Contruct collection of Triangle Things
     things = []
@@ -82,10 +82,11 @@ def main(
     # are closest to the s. For
     # Problem 4, you need to use these points to make a new estimate of
     # F and iterate until done.
-    while (diffs != 0):
+    while (diffs > 1):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            dist, c_k = covtree.CovTreeNode(things)
+            tree = covtree.CovTreeNode(things)
+            dist, c_k = tree.findClosestPoint(s, 1)
             c[k] = c_k
             F_reg = Frame.from_points(d, c)
             dists[k] = dist
