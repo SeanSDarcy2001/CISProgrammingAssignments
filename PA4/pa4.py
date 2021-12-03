@@ -45,7 +45,7 @@ def main(
     d = np.empty((sample_readings.N_samps, 3))
 
     for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
-        time.sleep(0.3)
+        #time.sleep(0.3)
         marks = sample_readings.S[k]
         a = marks[: A_bod.N_m]
         b = marks[A_bod.N_m: A_bod.N_m + B_bod.N_m]
@@ -82,15 +82,30 @@ def main(
     # F and iterate until done.
     tree = covtree.CovTreeNode(things)
 
-    while (any(dists > 5)):
+    convergence = False
+    iteration = 1
+    distHolder = np.ones((sample_readings.N_samps))
+    while (convergence == False):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
             c_k = tree.findClosestPoint(s, dists[k])
             if c_k is not None:
-                c[k] = c_k
-                dists[k] = np.linalg.norm(d[k] - c_k)
+                temp = np.linalg.norm(s - c_k)
+                if (temp < dists[k]) :
+                    dists[k] = np.linalg.norm(s - c_k)
+                    c[k] = c_k
+        print("Iteration:", iteration)
+        print("Mean distance prev iteration:")    
+        print(np.mean(distHolder))
+        print("Mean distance this iteration:")          
+        print(np.mean(dists))
+        if (np.isclose(np.mean(dists), np.mean(distHolder))) :
+            convergence = True
+            print("no change, convergence reached")
+        distHolder = dists.copy()
         F_reg = Frame.from_points(d, c)
-        print(max(dists))
+        iteration = iteration + 1
+        #print(dists)
 
     log.debug("writing output")
     output = writers.PA4(name, d, c, dists)
