@@ -70,7 +70,11 @@ def main(
     # Contruct collection of Triangle Things
     things = []
     for i in range(mesh.N_t):
-        things.append(TriangleThing(mesh.trig[:3]))
+        points = np.empty((3, 3))
+        for c in range(3):
+            index = mesh.trig[i, c]
+            points[c] = mesh.V[index]
+        things.append(TriangleThing(points))
 
     # Now assume that is an unknown transformation such that
     # c = F*d. F = I, and for

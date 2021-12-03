@@ -9,6 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class Frame:
+
     def __init__(self, r: np.ndarray, p: np.ndarray) -> None:
         """Create a frame with rotation `r` and translation `p`.
 

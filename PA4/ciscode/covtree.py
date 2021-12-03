@@ -1,15 +1,9 @@
 import numpy as np
 from .TriangleThing import TriangleThing
-import frame
+from .frame import Frame
 
 
 class CovTreeNode:
-
-    # F: frame
-    # UB: np.ndarray
-    # LB: np.ndarray
-    # HaveSubtrees: int
-    # nThings: int
 
     def __init__(self, Ts: list, nT: int):
         self.Things = Ts
@@ -19,12 +13,21 @@ class CovTreeNode:
         self.UB, self.LB = self.FindBoundingBox()
         self.ConstructSubtrees()
 
+    def appInvFrame(F: Frame, T: TriangleThing):
+        return F.inv @ T.sortPoint()
+
+    def extractPoints(Ts: np.ndarray, nT: int) -> np.ndarray:
+        """Return sort points for Thing."""
+        sort_points = np.empty((nT, 3))
+        for i in range(nT):
+            sort_points[i] = Ts[i].sortPoint()
+        return sort_points
+
     def ComputeCovFrame(self):
+        """Extract sort points of all Things to compute covariance frame."""
         Ts = self.Things
         nT = self.nThings
-        Points, nP = TriangleThing.extractPoints(Ts, nT)
-        # May extract nT sort points or perhaps
-        # all corner points if things are triangles.
+        Points, nP = self.extractPoints(Ts, nT)
         return self.FindCovFrame(Points, nP)
 
     def getCentroid(Ps: np.ndarray, nP: int):
@@ -52,6 +55,7 @@ class CovTreeNode:
                        q[0]**2 - q[1]**2 - q[2]**2 + q[3]**2]])
 
     def FindCovFrame(self, Ps: np.ndarray, nP: int):
+        """Find covariance frame by finding centroid and rotation."""
         C = self.getCentroid(Ps, nP)
 
         A = 0
@@ -59,29 +63,68 @@ class CovTreeNode:
             A += np.outer(Ps[i], Ps[i])
         R = self.getRotMat(A)
 
-        return frame.Frame(R, C)
+        return Frame(R, C)
 
     def FindBoundingBox(self):
+        """Find bounding box encompassing a list of Things."""
         F = self.F
         Things = self.Things
         nThings = self.nThings
-        UB = F.inv @ (Things[0].sortPoint())
-        LB = F.inv @ (Things[0].sortPoint())
+
+        UB = self.appInvFrame(F, Things[0])
+        LB = self.appInvFrame(F, Things[0])
 
         for k in range(nThings):
             LB, UB = Things[k].enlargeBounds(F, LB, UB)
 
         return [UB, LB]
 
+    def partition(self, arr, low, high):
+        """Returns pivot index for quicksort."""
+        i = (low-1)
+        pivot = self.appInvFrame(self.F, arr[high])[0]
+
+        for j in range(low, high):
+
+            # If current element is smaller than or
+            # equal to pivot
+            if self.appInvFrame(self.F, arr[j])[0] <= pivot:
+
+                # increment index of smaller element
+                i = i+1
+                arr[i], arr[j] = arr[j], arr[i]
+
+        arr[i+1], arr[high] = arr[high], arr[i+1]
+        return (i+1)
+
+    def quickSort(self, arr, low, high):
+        """Function to perform quicksort."""
+        if len(arr) == 1:
+            return arr
+        if low < high:
+            # pi is partitioning index, arr[p] is now
+            # at right place
+            p = self.partition(arr, low, high)
+
+            # Separately sort elements before
+            # partition and after pivot
+            self.quickSort(arr, low, p-1)
+            self.quickSort(arr, p+1, high)
+
     def SplitSort(self):
+        """Find nSplit and reorder Things so that
+        F.inverse() @ (Thing[k]->SortPoint()).x < 0 iff k < nSplit."""
+        # This can be done in place by suitable exchanges
         F = self.F
         Ts = self.Things
         nT = self.nThings
-        """find an integer nSplit and reorder Things(...) so that
-        F.inverse()*(Thing[k]->SortPoint()).x <0 if and only if k<nSplit.
-        This can be done “in place” by suitable exchanges."""
-        # TODO: implement
-        return 0  # nSplit
+
+        self.Things = self.quickSort(Ts, 0, nT-1)
+        for i in range(nT):
+            if (self.appInvFrame(F, self.Things[i])[0] >= 0):
+                return i
+
+        return nT
 
     def ConstructSubtrees(self, minCount, minDiag):
         if (self.nThings <= minCount or np.linalg.norm(self.UB-self.LB) <= minDiag):
