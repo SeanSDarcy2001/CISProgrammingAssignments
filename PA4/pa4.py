@@ -84,7 +84,7 @@ def main(
     # F and iterate until done.
     tree = covtree.CovTreeNode(things)
 
-    while (any(diffs >= 1)):
+    while (any(dists >= 20)):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
             c_k = tree.findClosestPoint(s, 1)
