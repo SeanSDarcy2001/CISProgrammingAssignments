@@ -70,9 +70,9 @@ def main(
     things = []
     for i in range(mesh.N_t):
         points = np.empty((3, 3))
-        for c in range(3):
-            index = mesh.trig[i, c]
-            points[c] = mesh.V[index]
+        for q in range(3):
+            index = mesh.trig[i, q]
+            points[q] = mesh.V[index]
         things.append(thing.TriangleThing(points))
 
     # Now assume that is an unknown transformation such that
@@ -86,7 +86,7 @@ def main(
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
             tree = covtree.CovTreeNode(things)
-            dist, c_k = tree.findClosestPoint(s, 1)
+            c_k, dist = tree.findClosestPoint(s, 1)
             c[k] = c_k
             F_reg = Frame.from_points(d, c)
             dists[k] = dist

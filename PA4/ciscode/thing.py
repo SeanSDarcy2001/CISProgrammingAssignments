@@ -1,5 +1,5 @@
 import numpy as np
-from ciscode import frame, closest
+from ciscode import frame
 
 
 class TriangleThing:
@@ -43,12 +43,13 @@ class TriangleThing:
         bot = np.min(LB, UB)
         return n >= bot and n <= top
 
-    def closestPointTo(self, v: np.ndarray):
+    def closestPointTo(self, v: np.ndarray) -> np.ndarray:
         """Find closest point to given vector."""
         max_point = 0
         min_dist = np.inf
         for i in range(3):
             point = self.corners[i]
-            if (closest.distance(point, v) < min_dist):
+            if (np.linalg.norm(point - v) < min_dist):
+                min_dist = np.linalg.norm(point - v)
                 max_point = point
-        return point
+        return max_point

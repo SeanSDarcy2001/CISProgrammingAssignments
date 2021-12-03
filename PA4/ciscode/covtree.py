@@ -152,8 +152,8 @@ class CovTreeNode:
         if vLocal[2] > self.UB[2]+bound:
             return
         if self.HaveSubtrees:
-            self.lSubtree.findClosestPoint(v, bound, closest)
-            self.rSubtree.findClosestPoint(v, bound, closest)
+            self.lSubtree.findClosestPoint(v, bound)
+            self.rSubtree.findClosestPoint(v, bound)
         else:
             for i in range(self.nThings):
                 closest = self.UpdateClosest(self.Things[i], v, bound)
