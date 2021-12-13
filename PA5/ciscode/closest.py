@@ -16,6 +16,7 @@ def brute_force(
     """Linearly searches triangles for closest surface triangle."""
     min = np.inf
     closest = 0
+    t_index = -1
 
     for i, tri in enumerate(t):
         p = v[tri[0]]
@@ -29,7 +30,7 @@ def brute_force(
 
         c = p + x[0] * (q - p) + x[1] * (r - p)
 
-        # Check bound
+        # Check boundaries
         if x[0] < 0:
             c = triangle_bound(c, r, p)
         elif x[1] < 0:
@@ -41,8 +42,9 @@ def brute_force(
         if min > dist:
             min = dist
             closest = c
+            t_index = i
 
-    return closest
+    return closest, t_index
 
 
 def triangle_bound(c, p, q):
@@ -70,5 +72,73 @@ def find_closest(
             two points, and the location of the closest vertex in CT
             coordinates.
     """
-    c = brute_force(point, vertices, t)
-    return distance(point, c), c
+    c, i = brute_force(point, vertices, t)
+    return distance(point, c), c, i
+
+
+def trig_area(a, b, c):
+    ab = a - b
+    ac = a - c
+    S = np.cross(ab, ac) / 2
+    return S
+
+
+def barycenter(atlas: np.ndarray, vert: np.ndarray, v: np.ndarray, c_k: np.ndarray, trig: np.ndarray, i: int):
+    """Computes closest vertex to point and returns distance.
+
+        Args:
+            atlas (np.ndarray): The atlas of mode weights
+            vert (np.ndarray): List of vertices to be matched
+            v (np.ndarray): Closest point
+            c_k (np.ndarray): Current closest point on triangle
+            trig (np.ndarray): List of triangle vertex indices
+            i (int): Triangle vertex index for this c
+
+        Returns:
+            [return]: [write]
+        """
+
+    # Identify vertices of triangle c_k belongs to
+    tri = trig[i]
+    s = vert[tri[0]]
+    t = vert[tri[1]]
+    u = vert[tri[2]]
+
+    tolerance = .001
+    max_iter = 5
+    mean_error = 0
+    prev_error = 0
+
+    for j in range(max_iter):
+        # Compute barycentric coordinates of c_k
+        A = trig_area(s, t, u)
+        zeta = trig_area(c_k, t, u) / A
+        xi = trig_area(c_k, s, t) / A
+        psi = 1 - zeta - xi
+
+        # Compute q_mk for this c_k
+        q_mk = np.empty(atlas.shape[0], 3)
+        for m in range(atlas.shape[0]):
+            # Find q values
+            q_mk[m] = zeta * atlas[m, tri[0]] + xi * \
+                atlas[m, tri[1]] + psi * atlas[m, tri[2]]
+
+        # Solve least squares problem
+        l = np.linalg.lstsq(q_mk, c_k)
+        l = l[1:]  # ignore weight for mode 0
+
+        # Update surface mesh model
+        for i in range(vert.shape[0]):
+            v_0 = atlas[0, i]
+            v_m = atlas[1:, i]
+            vert[i] = v_0 + np.dot(v_m, l)
+
+        # Update c_k
+        dist, c_k, i = find_closest(v, vert, trig)
+
+        # Check if iteration has stalled
+        if np.abs(prev_error - dist) < tolerance:
+            break
+        prev_error = dist
+
+    return dist, c_k, i

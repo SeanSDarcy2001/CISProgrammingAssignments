@@ -32,7 +32,7 @@ def main(
     if not output_dir.exists():
         output_dir.mkdir()
 
-    # Read inputs
+    """Read inputs"""
     A_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyA.txt")
     B_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyB.txt")
     mesh = readers.ProblemXMesh(data_dir / f"Problem5MeshFile.sur")
@@ -45,7 +45,7 @@ def main(
 
     d = np.empty((sample_readings.N_samps, 3))
 
-    # Start timing
+    """Start timing"""
     start_time = time.time()
 
     for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
@@ -64,10 +64,10 @@ def main(
     c = np.empty((sample_readings.N_samps, 3))
     dists = np.ones((sample_readings.N_samps)) * np.inf
 
-    # Initial guess for PA4
+    """Initial guess for F_reg"""
     F_reg = Frame(np.eye(3), np.array([0, 0, 0]))
 
-    # Contruct collection of Triangle Things
+    """Contruct collection of Triangle Things."""
     things = []
     for i in range(mesh.N_t):
         points = np.empty((3, 3))
@@ -76,13 +76,7 @@ def main(
             points[q] = mesh.V[index]
         things.append(thing.TriangleThing(points))
 
-    # Now assume that is an unknown transformation such that
-    # c = F*d. F = I, and for
-    # Problem 4 you can use this as an initial guess. Compute sample
-    # points s = F*d. Now find the points c on the surface mesh that
-    # are closest to the s. For
-    # Problem 4, you need to use these points to make a new estimate of
-    # F and iterate until done.
+    """Covtree initialization."""
     tree = covtree.CovTreeNode(things, modes.Atlas)
     s = F_reg @ d
     tolerance = .00001
@@ -92,17 +86,21 @@ def main(
 
     for i in range(max_iter):
 
-        # find the nearest neighbors between the current source and destination points
+        """Find the nearest neighbors between the current source and destination points."""
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             # cov tree
             # if (dists[k] > 2) :
             #s[k] = tree.findClosestPoint(s[k], 1000)
-            dists[k], s[k] = closest.find_closest(s[k], mesh.V, mesh.trig)
+            dists[k], c[k], t = closest.find_closest(s[k], mesh.V, mesh.trig)
 
-        # compute the transformation between the current source and nearest destination points
+            """PA5 added computation."""
+            dists[k], s[k], t = closest.barycenter(
+                modes.Atlas, mesh.V, s[k], c[k], mesh.trig, t)
+
+        """Compute the transformation between the current source and nearest destination points."""
         F_reg = Frame.from_points(d, s)
 
-        # update the current source
+        """Update the current source."""
         c = F_reg @ d
         for k in track(range(sample_readings.N_samps), "Updating s_k's..."):
             # cov tree
@@ -119,13 +117,14 @@ def main(
 
         log.debug(f"Mean Error for iteration  " f"{i+1}: " f"{mean_error}")
 
-    # calculate final transformation
+    """Calculate final transformation"""
     F_reg = Frame.from_points(d, c)
 
-    # End timing
+    """End timing"""
     end_time = time.time()
     log.info(f"Execution Time: " f"{end_time - start_time}")
 
+    """Write and save output for error calculations."""
     log.debug("writing output")
     output = writers.PA5(name, d, c, dists, np.empty(3))
     output.save(output_dir)
