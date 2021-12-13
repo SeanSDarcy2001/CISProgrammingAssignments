@@ -30,6 +30,7 @@ class PA5(Writer):
         self.s = s
         self.c = c
         self.diff = D
+        self.m = m
         self.N_samps = D.shape[0]
         self.N_modes = m.shape[0]
 
@@ -40,7 +41,7 @@ class PA5(Writer):
         # Append mode weights
         for i in range(self.N_modes):
             outputs += [
-                f"  {m[i]:>6.04f}"
+                f"  {self.m[i]:>6.04f}"
             ]
 
         for i in range(self.N_samps):
