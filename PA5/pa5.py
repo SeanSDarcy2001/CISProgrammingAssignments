@@ -83,6 +83,7 @@ def main(
     max_iter = 5
     mean_error = 0
     prev_error = 0
+    lambdas = 0
 
     for i in range(max_iter):
 
@@ -94,7 +95,7 @@ def main(
             dists[k], c[k], t = closest.find_closest(s[k], mesh.V, mesh.trig)
 
             """PA5 added computation."""
-            dists[k], s[k], t = closest.barycenter(
+            dists[k], s[k], lambdas = closest.barycenter(
                 modes.Atlas, mesh.V, s[k], c[k], mesh.trig, t)
 
         """Compute the transformation between the current source and nearest destination points."""
@@ -126,7 +127,7 @@ def main(
 
     """Write and save output for error calculations."""
     log.debug("writing output")
-    output = writers.PA5(name, d, c, dists, np.empty(3))
+    output = writers.PA5(name, d, c, dists, lambdas)
     output.save(output_dir)
 
     ref_output_path = data_dir / (name + "-Output.txt")

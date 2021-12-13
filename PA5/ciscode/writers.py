@@ -40,7 +40,7 @@ class PA5(Writer):
         # Append mode weights
         for i in range(self.N_modes):
             outputs += [
-                f"  {self.m[i]:>6.04f}"
+                f"  {m[i]:>6.04f}"
             ]
 
         for i in range(self.N_samps):

@@ -106,7 +106,6 @@ def barycenter(atlas: np.ndarray, vert: np.ndarray, v: np.ndarray, c_k: np.ndarr
 
     tolerance = .001
     max_iter = 5
-    mean_error = 0
     prev_error = 0
 
     for j in range(max_iter):
@@ -117,21 +116,21 @@ def barycenter(atlas: np.ndarray, vert: np.ndarray, v: np.ndarray, c_k: np.ndarr
         psi = 1 - zeta - xi
 
         # Compute q_mk for this c_k
-        q_mk = np.empty(atlas.shape[0], 3)
+        q_mk = np.empty([atlas.shape[0], 3])
         for m in range(atlas.shape[0]):
             # Find q values
             q_mk[m] = zeta * atlas[m, tri[0]] + xi * \
                 atlas[m, tri[1]] + psi * atlas[m, tri[2]]
 
         # Solve least squares problem
-        l = np.linalg.lstsq(q_mk, c_k)
+        l = np.linalg.lstsq(q_mk.T, c_k.T, rcond=1)[0]
         l = l[1:]  # ignore weight for mode 0
 
         # Update surface mesh model
         for i in range(vert.shape[0]):
             v_0 = atlas[0, i]
             v_m = atlas[1:, i]
-            vert[i] = v_0 + np.dot(v_m, l)
+            vert[i] = v_0 + np.dot(l, v_m)
 
         # Update c_k
         dist, c_k, i = find_closest(v, vert, trig)
@@ -141,4 +140,4 @@ def barycenter(atlas: np.ndarray, vert: np.ndarray, v: np.ndarray, c_k: np.ndarr
             break
         prev_error = dist
 
-    return dist, c_k, i
+    return dist, c_k, l
