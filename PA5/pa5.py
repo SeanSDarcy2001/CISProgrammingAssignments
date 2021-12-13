@@ -32,7 +32,7 @@ def main(
     if not output_dir.exists():
         output_dir.mkdir()
 
-    # Reading in inputs
+    # Read inputs
     A_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyA.txt")
     B_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyB.txt")
     mesh = readers.ProblemXMesh(data_dir / f"Problem5MeshFile.sur")
@@ -48,10 +48,7 @@ def main(
     # Start timing
     start_time = time.time()
 
-    # Loop for performing rigid registrations for F_A and F_B to compute
-    # d_k values.
     for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
-        # time.sleep(0.3)
         marks = sample_readings.S[k]
         a = marks[: A_bod.N_m]
         b = marks[A_bod.N_m: A_bod.N_m + B_bod.N_m]
@@ -60,14 +57,14 @@ def main(
         log.debug(f"{k}: F_A =\n{F_A}")
         F_B = Frame.from_points(B_bod.Y, b)
         log.debug(f"{k}: F_B =\n{F_B}")
-        d[k] = F_B.inv() @ F_A @ A_bod.t
+        d[k] = F_B.inv().__matmul__(F_A.__matmul__(A_bod.t))
 
     log.debug("computing s_k points using F_reg")
 
     c = np.empty((sample_readings.N_samps, 3))
     dists = np.ones((sample_readings.N_samps)) * np.inf
 
-    # Initial guess for PA5
+    # Initial guess for PA4
     F_reg = Frame(np.eye(3), np.array([0, 0, 0]))
 
     # Contruct collection of Triangle Things
@@ -87,40 +84,50 @@ def main(
     # Problem 4, you need to use these points to make a new estimate of
     # F and iterate until done.
     tree = covtree.CovTreeNode(things, modes.Atlas)
+    s = F_reg @ d
+    tolerance = .00001
+    max_iter = 5
+    mean_error = 0
+    prev_error = 0
 
-    convergence = False
-    iteration = 1
-    distHolder = np.ones((sample_readings.N_samps))
-    while (convergence == False):
+    for i in range(max_iter):
+
+        # find the nearest neighbors between the current source and destination points
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
-            s = F_reg @ d[k]
-            c_k = tree.barycenter(s, dists[k])
-            if c_k is not None:
-                temp = np.linalg.norm(s - c_k)
-                if (temp < dists[k]):
-                    dists[k] = np.linalg.norm(s - c_k)
-                    c[k] = c_k
-        log.debug("Iteration:", iteration)
-        log.debug("Mean distance prev iteration:")
-        log.debug(np.mean(distHolder))
-        log.debug("Mean distance this iteration:")
-        log.debug(np.mean(dists))
-        if (np.isclose(np.mean(dists), np.mean(distHolder))):
-            convergence = True
-            log.debug("no change, convergence reached")
-        distHolder = dists.copy()
-        F_reg = Frame.from_points(d, c)
-        iteration = iteration + 1
-        log.debug(dists)
+            # cov tree
+            # if (dists[k] > 2) :
+            #s[k] = tree.findClosestPoint(s[k], 1000)
+            dists[k], s[k] = closest.find_closest(s[k], mesh.V, mesh.trig)
+
+        # compute the transformation between the current source and nearest destination points
+        F_reg = Frame.from_points(d, s)
+
+        # update the current source
+        c = F_reg @ d
+        for k in track(range(sample_readings.N_samps), "Updating s_k's..."):
+            # cov tree
+            #dists[k] = closest.distance(c[k], s[k])
+            s[k] = c[k]
+
+        # check error
+        mean_error = np.mean(dists)
+
+        # comment out for covtree
+        if np.abs(prev_error - mean_error) < tolerance:
+            break
+        prev_error = mean_error
+
+        log.debug(f"Mean Error for iteration  " f"{i+1}: " f"{mean_error}")
+
+    # calculate final transformation
+    F_reg = Frame.from_points(d, c)
 
     # End timing
     end_time = time.time()
-    log.info(
-        f"Execution Time: " f"{end_time - start_time}"
-    )
+    log.info(f"Execution Time: " f"{end_time - start_time}")
 
     log.debug("writing output")
-    output = writers.PA5(name, d, c, dists)
+    output = writers.PA5(name, d, c, dists, np.empty(3))
     output.save(output_dir)
 
     ref_output_path = data_dir / (name + "-Output.txt")

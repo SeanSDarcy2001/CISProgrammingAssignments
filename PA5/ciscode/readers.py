@@ -43,13 +43,15 @@ class Problem5Modes:
         self.path = path
         with open(path, "r") as f:
             line = next(f)
+            line = line.replace("=", " ")
             toks = line.split(" ")
-            self.N_verts = int(toks[1])     # number of vertices
-            self.N_modes = int(toks[2])     # number of modes
+            self.N_verts = int(toks[2])     # number of vertices
+            self.N_modes = int(toks[4])     # number of modes
 
+        self.Atlas = np.empty([self.N_modes, self.N_verts, 3])
         for m in range(self.N_modes):
             self.Atlas[m] = np.loadtxt(path, delimiter=",", skiprows=(
-                1+m*(self.N_verts+1)), dtype=np.float64)
+                2+m*(self.N_verts+1)), max_rows=self.N_verts, dtype=np.float64)
 
 
 class SampleReadings:

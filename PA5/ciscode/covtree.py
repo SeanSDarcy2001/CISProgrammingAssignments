@@ -139,9 +139,9 @@ class CovTreeNode:
 
         self.HaveSubtrees = 1
         nSplit = self.SplitSort()
-        self.lSubtree = CovTreeNode(self.Things[0:nSplit])
+        self.lSubtree = CovTreeNode(self.Things[0:nSplit], self.atlas)
         self.rSubtree = CovTreeNode(
-            self.Things[nSplit:self.nThings])
+            self.Things[nSplit:self.nThings], self.atlas)
 
     def exhaustiveSearch(self, v, bound):
         """Performs exhaustive search of all nodes in covTree."""
