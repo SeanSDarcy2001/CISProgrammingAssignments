@@ -5,9 +5,10 @@ from .frame import Frame
 
 class CovTreeNode:
 
-    def __init__(self, Ts: list):
+    def __init__(self, Ts: list, atl: np.ndarray):
         self.Things = Ts
         self.nThings = len(Ts)
+        self.atlas = atl
 
         self.F = self.ComputeCovFrame()
         self.UB, self.LB = self.FindBoundingBox()
@@ -146,12 +147,14 @@ class CovTreeNode:
         """Performs exhaustive search of all nodes in covTree."""
         min_dist = np.inf
         closest = np.empty(3)
+        thing = 0
         for i in range(self.nThings):
             temp = self.UpdateClosest(self.Things[i], v, bound)
             temp_dist = np.linalg.norm(temp-v)
             if (temp_dist < min_dist):
                 min_dist = temp_dist
                 closest = temp
+                thing = i
         return closest
 
     def findClosestPoint(self, v: np.ndarray, bound: np.float64):
@@ -194,4 +197,54 @@ class CovTreeNode:
         if (dist < bound):
             bound = dist
             return cp
-        return np.empty(3)
+        return np.array([np.inf, np.inf, np.inf])
+
+    def trig_area(a, b, c):
+        ab = a - b
+        ac = a - c
+        S = np.cross(ab, ac) / 2
+        return S
+
+    def barycenter(self, v: np.ndarray, bound: np.float64):
+        """Computes closest vertex to point and returns distance.
+
+            Args:
+                atlas (np.ndarray): The atlas of mode weights
+                vertices (np.ndarray): List of vertices to be matched
+                t (np.ndarray): List of triangle vertex indices
+
+            Returns:
+                Tuple[np.float32, np.ndarray]: The distance between the closest
+                    two points, and the location of the closest vertex in CT
+                    coordinates.
+            """
+
+        # Iterate sequence until it seems to be stalled
+
+        # Find c_k value by PA4
+        c_k = self.findClosestPoint(v, bound)
+
+        # Find triangle of interest
+        min_dist = np.inf
+        thing = 0
+        for i in range(self.nThings):
+            temp = self.Things[i].sortPoint()
+            temp_dist = np.linalg.norm(temp-v)
+            if (temp_dist < min_dist):
+                min_dist = temp_dist
+                thing = i
+
+        triangle = self.Things[i]
+        s = triangle.corners[0]
+        t = triangle.corners[1]
+        u = triangle.corners[2]
+
+        A = self.trig_area(s, t, u)
+        zeta = self.trig_area(c_k, t, u) / A
+        xi = self.trig_area(c_k, s, t) / A
+        psi = 1 - zeta - xi
+
+        q_m = np.empty(self.atlas.shape[0], 3)
+        for m in range(self.atlas.shape[0]):
+            # Find q values
+            q_m[m] = zeta * self.atlas[i]

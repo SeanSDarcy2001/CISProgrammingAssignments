@@ -36,7 +36,8 @@ def main(
     A_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyA.txt")
     B_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyB.txt")
     mesh = readers.ProblemXMesh(data_dir / f"Problem5MeshFile.sur")
-    log.debug(mesh)
+    modes = readers.Problem5Modes(data_dir / f"Problem5Modes.txt")
+
     sample_readings = readers.SampleReadings(
         data_dir / f"{name}-SampleReadingsTest.txt")
 
@@ -85,7 +86,7 @@ def main(
     # are closest to the s. For
     # Problem 4, you need to use these points to make a new estimate of
     # F and iterate until done.
-    tree = covtree.CovTreeNode(things)
+    tree = covtree.CovTreeNode(things, modes.Atlas)
 
     convergence = False
     iteration = 1
@@ -93,7 +94,7 @@ def main(
     while (convergence == False):
         for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
             s = F_reg @ d[k]
-            c_k = tree.findClosestPoint(s, dists[k])
+            c_k = tree.barycenter(s, dists[k])
             if c_k is not None:
                 temp = np.linalg.norm(s - c_k)
                 if (temp < dists[k]):
