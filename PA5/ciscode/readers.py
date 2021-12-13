@@ -36,6 +36,22 @@ class ProblemXMesh:
         self.trig = np.loadtxt(path, skiprows=self.N_v+2, dtype=int)
 
 
+class Problem5Modes:
+    """Reads in atlas modes for mesh vertices."""
+
+    def __init__(self, path: str):
+        self.path = path
+        with open(path, "r") as f:
+            line = next(f)
+            toks = line.split(" ")
+            self.N_verts = int(toks[1])     # number of vertices
+            self.N_modes = int(toks[2])     # number of modes
+
+        for m in range(self.N_modes):
+            self.Atlas[m] = np.loadtxt(path, delimiter=",", skiprows=(
+                1+m*(self.N_verts+1)), dtype=np.float64)
+
+
 class SampleReadings:
     """Parses the sample readings data."""
 

@@ -21,9 +21,9 @@ log = logging.getLogger()
 
 
 @click.command()
-@click.option("-d", "--data-dir", default="PA4/data", help="Where the data is.")
-@click.option("-o", "--output_dir", default="PA4/outputs", help="Where to store outputs.")
-@click.option("-n", "--name", default="PA4-A-Debug", help="Which experiment to run.")
+@click.option("-d", "--data-dir", default="PA5/data", help="Where the data is.")
+@click.option("-o", "--output_dir", default="PA5/outputs", help="Where to store outputs.")
+@click.option("-n", "--name", default="PA5-A-Debug", help="Which experiment to run.")
 def main(
     data_dir: str = "data", output_dir: str = "outputs", name: str = "BLAHHHH-"
 ):
@@ -32,10 +32,10 @@ def main(
     if not output_dir.exists():
         output_dir.mkdir()
 
-    # Read inputs
-    A_bod = readers.ProblemXBodyY(data_dir / f"Problem4-BodyA.txt")
-    B_bod = readers.ProblemXBodyY(data_dir / f"Problem4-BodyB.txt")
-    mesh = readers.ProblemXMesh(data_dir / f"Problem4MeshFile.sur")
+    # Reading in inputs
+    A_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyA.txt")
+    B_bod = readers.ProblemXBodyY(data_dir / f"Problem5-BodyB.txt")
+    mesh = readers.ProblemXMesh(data_dir / f"Problem5MeshFile.sur")
     log.debug(mesh)
     sample_readings = readers.SampleReadings(
         data_dir / f"{name}-SampleReadingsTest.txt")
@@ -47,6 +47,8 @@ def main(
     # Start timing
     start_time = time.time()
 
+    # Loop for performing rigid registrations for F_A and F_B to compute
+    # d_k values.
     for k in track(range(sample_readings.N_samps), "Computing d_k's..."):
         # time.sleep(0.3)
         marks = sample_readings.S[k]
@@ -64,7 +66,7 @@ def main(
     c = np.empty((sample_readings.N_samps, 3))
     dists = np.ones((sample_readings.N_samps)) * np.inf
 
-    # Initial guess for PA4
+    # Initial guess for PA5
     F_reg = Frame(np.eye(3), np.array([0, 0, 0]))
 
     # Contruct collection of Triangle Things
@@ -117,7 +119,7 @@ def main(
     )
 
     log.debug("writing output")
-    output = writers.PA4(name, d, c, dists)
+    output = writers.PA5(name, d, c, dists)
     output.save(output_dir)
 
     ref_output_path = data_dir / (name + "-Output.txt")

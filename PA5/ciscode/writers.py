@@ -20,25 +20,33 @@ class Writer:
         log.info(f"Saved output to {output_dir / self.fname}")
 
 
-class PA4(Writer):
-    """Output formatter class for programming assignment 4."""
+class PA5(Writer):
+    """Output formatter class for programming assignment 5."""
 
-    def __init__(self, name: str, d, c, D):
+    def __init__(self, name: str, s, c, D, m):
         letter = name.split('-')[1]
-        super().__init__(f"pa4-{letter}-Output.txt")
+        super().__init__(f"pa5-{letter}-Output.txt")
         self.name = name
-        self.d = d
+        self.s = s
         self.c = c
         self.diff = D
         self.N_samps = D.shape[0]
+        self.N_modes = m.shape[0]
 
     def __str__(self):
         outputs = []
-        outputs.append(f"{self.N_samps}, {self.fname}")
+        outputs.append(f"{self.N_samps}, {self.fname}, {self.N_modes}")
+
+        # Append mode weights
+        for i in range(self.N_modes):
+            outputs += [
+                f"  {self.m[i]:>6.04f}"
+            ]
+
         for i in range(self.N_samps):
             outputs += [
                 "  " +
-                "   ".join(map(lambda x: f"{x:>6.02f}", self.d[i])) +
+                "   ".join(map(lambda x: f"{x:>6.02f}", self.s[i])) +
                 "       " +
                 "   ".join(map(lambda x: f"{x:>6.02f}", self.c[i])) +
                 f"    {self.diff[i]:>6.03f}"
