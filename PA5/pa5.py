@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 import numpy as np
 
-from ciscode import readers, Frame, writers, closest, testing, thing, covtree
+from ciscode import readers, Frame, writers, closest, testing, thing, covariancetree
 
 
 FORMAT = "%(message)s"
@@ -61,7 +61,8 @@ def main(
 
     log.debug("computing s_k points using F_reg")
 
-    c = np.empty((sample_readings.N_samps, 3))
+    c = np.zeros((sample_readings.N_samps, 3))
+    s = np.empty((sample_readings.N_samps, 3))
     dists = np.ones((sample_readings.N_samps)) * np.inf
 
     """Initial guess for F_reg"""
@@ -77,49 +78,107 @@ def main(
         things.append(thing.TriangleThing(points))
 
     """Covtree initialization."""
-    tree = covtree.CovTreeNode(things, modes.Atlas)
-    s = F_reg @ d
-    tolerance = .00001
-    max_iter = 5
-    mean_error = 0
-    prev_error = 0
-    lambdas = 0
+    #build tree
+    tree = covariancetree.CovTreeNode(things, modes.Atlas)
+    
+    #ICP ICP ICP #ICP
 
-    for i in range(max_iter):
+    mean_dist = 0
+    convergence = False
 
-        """Find the nearest neighbors between the current source and destination points."""
-        for k in track(range(sample_readings.N_samps), "Computing s_k's..."):
-            # cov tree
-            # if (dists[k] > 2) :
-            #s[k] = tree.findClosestPoint(s[k], 1000)
-            dists[k], c[k], t = closest.find_closest(s[k], mesh.V, mesh.trig)
+    #Lower value means more iterations
+    convergence_criteria = .1
 
-            """PA5 added computation."""
-            dists[k], s[k], lambdas = closest.barycenter(
-                modes.Atlas, mesh.V, s[k], c[k], mesh.trig, t)
+    #tune to noise, max d error
+    bound = 5
 
-        """Compute the transformation between the current source and nearest destination points."""
-        F_reg = Frame.from_points(d, s)
+    #iteration index
+    i = 0
 
-        """Update the current source."""
-        c = F_reg @ d
-        for k in track(range(sample_readings.N_samps), "Updating s_k's..."):
-            # cov tree
-            #dists[k] = closest.distance(c[k], s[k])
-            s[k] = c[k]
+    newThings = np.copy(things)
 
-        # check error
-        mean_error = np.mean(dists)
+    while (convergence == False):
 
-        # comment out for covtree
-        if np.abs(prev_error - mean_error) < tolerance:
-            break
-        prev_error = mean_error
+        print("-------------------------------------------")
+        print("Iteration", i + 1)
+        print("Freg:")
+        print(F_reg)
 
-        log.debug(f"Mean Error for iteration  " f"{i+1}: " f"{mean_error}")
+        #update s
+        for k in track(range(sample_readings.N_samps), "Updating s points...") :
+            s[k] = F_reg.__matmul__(d[k])
 
-    """Calculate final transformation"""
-    F_reg = Frame.from_points(d, c)
+
+        #compute closest point on mesh
+        for k in track(range(sample_readings.N_samps), "Computing closest points..."):
+            
+            #FOR COVTREE
+            c[k], triangleOfInterest = tree.findClosestPoint(s[k], c[k], bound)
+            #print(triangleOfInterest.corners)
+            qs = closest.barycenter(modes.Atlas, tree, triangleOfInterest, c[k])
+            # Solve least squares problem
+            l = np.linalg.lstsq(qs.T, c[k].T, rcond=1)[0]
+            l = l[1:]  # ignore weight for mode 0
+            #print(l)
+
+            vert = triangleOfInterest.corners
+            p = vert[0]
+            t = vert[1]
+            u = vert[2]
+            pIndex = np.where(tree.points == p)[0][0]
+            tIndex = np.where(tree.points == t)[0][0]
+            uIndex = np.where(tree.points == u)[0][0]
+
+            v_0 = modes.Atlas[0, pIndex]
+            v_m = modes.Atlas[1:, pIndex]
+            pUpdate = v_0 + np.dot(l, v_m)
+
+            v_0 = modes.Atlas[0, tIndex]
+            v_m = modes.Atlas[1:, tIndex]
+            tUpdate = v_0 + np.dot(l, v_m)
+           
+
+            v_0 = modes.Atlas[0, uIndex]
+            v_m = modes.Atlas[1:, uIndex]
+            uUpdate = v_0 + np.dot(l, v_m)
+
+            updatedVertices = np.empty((3, 3))
+            updatedVertices[0] = pUpdate
+            updatedVertices[0] = tUpdate
+            updatedVertices[0] = uUpdate
+
+            newThings[i] = thing.TriangleThing(updatedVertices)
+
+            #print(out)
+
+            #FOR LINEAR
+            #dists[k], c[k] = closest.find_closest(s[k], mesh.V, mesh.trig)
+
+        print(len(newThings))
+        print(len(things))
+        
+        #tree = covariancetree.CovTreeNode(newThings, modes.Atlas)
+
+        #3D-3D rigid registration between tracked markers computed closest points
+        F_reg = Frame.from_points(d, c)
+
+        #compute changes from previous closest to new closest
+        for k in track(range(sample_readings.N_samps), "Computing change...") :
+            dists[k] = closest.distance(c[k], s[k])
+    
+
+        # check mean shift
+        prevMean = np.copy(mean_dist)
+        mean_dist = np.mean(dists)
+        print("Mean Distance:")
+        print(mean_dist)
+
+        #determine convergence
+        if (closest.distance(mean_dist, prevMean) < convergence_criteria) :
+            convergence = True
+
+        i = i + 1
+        print("-------------------------------------------")
 
     """End timing"""
     end_time = time.time()
@@ -127,7 +186,7 @@ def main(
 
     """Write and save output for error calculations."""
     log.debug("writing output")
-    output = writers.PA5(name, d, c, dists, lambdas)
+    output = writers.PA5(name, d, c, dists, mesh)
     output.save(output_dir)
 
     ref_output_path = data_dir / (name + "-Output.txt")
